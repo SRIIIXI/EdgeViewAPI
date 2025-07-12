@@ -3,25 +3,25 @@
 
 #include "Defines.hpp"
 
-#define MUTEX pthread_mutex_t
-
 extern "C"
 {
 
-class Mutex
-{
-public:
-	Mutex();
-	~Mutex();
-	bool create();
-	bool destroy();
-	bool lock();
-	bool tryLock();
-	bool unlock();
-private:
-	MUTEX mutex;
-	bool created;
-};
+	typedef struct MutexReference;
+
+	class Mutex
+	{
+	public:
+		Mutex();
+		~Mutex();
+		bool create();
+		bool destroy();
+		bool lock();
+		bool tryLock();
+		bool unlock();
+	private:
+		MutexReference* mutex_reference;
+		bool created;
+	};
 
 }
 

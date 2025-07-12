@@ -4,6 +4,7 @@ project(EdgeViewAPI)
 
 set(HttpServer_VERSION_MAJOR 1)
 set(HttpServer_VERSION_MINOR 0)
+set(CMAKE_CXX_STANDARD 17)
 
 set(HTTPSERVER_INCLUDE ./include)
 set(HTTPSERVER_SOURCES ./src)

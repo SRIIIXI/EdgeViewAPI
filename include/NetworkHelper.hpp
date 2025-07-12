@@ -3,10 +3,21 @@
 
 #include "Defines.hpp"
 
+#if defined(_WIN32) || defined(WIN32)
+#define LAST_ERROR    ::GetLastError()
+#define SOCK_ERROR    ::WSAGetLastError()
+#define closesocket(n) ::closesocket(n)
+#else
+#define LAST_ERROR    errno
+#define SOCK_ERROR    errno
 #define SOCKET int
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR	 (-1)
 #define LPSOCKADDR sockaddr*
+#define closesocket(n) close(n)
+#endif
+
+
 
 // Framework defined Network Events
 const long STARTUPEVENT = 0;

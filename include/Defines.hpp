@@ -30,6 +30,17 @@
 #include <filesystem>
 #include <chrono>
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#undef UNICODE
+#include <WinSock2.h>
+#include <Ws2tcpip.h>
+#include <WinBase.h>
+#include <Windows.h>
+#include <process.h>
+#include <direct.h>
+#include <TlHelp32.h>
+#include <psapi.h>
+#else
 // OS Headers
 #include <unistd.h>
 #include <dirent.h>
@@ -49,6 +60,14 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <pwd.h>
+#endif
+
+#if defined(_WIN32) || defined(WIN32)
+#define strtoull(str, endptr, base) _strtoui64(str, endptr, base)
+#define sleep(n) ::Sleep(n*1000)
+#define getpid()	_getpid()
+#define pid_t    long
+#endif
 
 typedef std::vector<std::string> string_list;
 typedef std::map<std::string, std::string> key_value_list;

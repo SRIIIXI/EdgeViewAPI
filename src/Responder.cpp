@@ -8,6 +8,8 @@ Responder::Responder()
     memset((void*)&_ServerAddress,0,sizeof(sockaddr_in));
     _PreFetchedBufferSize = 0;
     _PreFetchedBuffer = NULL;
+	_ServerName.clear();
+	_ServerPort = 0;
 }
 
 Responder::Responder(const Responder& other)
@@ -19,12 +21,14 @@ Responder::Responder(const Responder& other)
 	if(_PreFetchedBuffer != NULL)
 	{
 		delete _PreFetchedBuffer;
-		_PreFetchedBuffer = NULL;
 	}
+
+	_PreFetchedBuffer = NULL;
 	
 	_Socket = other._Socket;
 	_Connected = other._Connected;
 	memcpy((void*)&_ServerAddress, (void*)&other._ServerAddress, sizeof(sockaddr_in));
+	_ServerPort = other._ServerPort;
 
 	if(other._PreFetchedBufferSize > 0)
 	{
@@ -43,12 +47,13 @@ Responder& Responder::operator=( const Responder& other)
 	if(_PreFetchedBuffer != NULL)
 	{
 		delete _PreFetchedBuffer;
-		_PreFetchedBuffer = NULL;
 	}
+	_PreFetchedBuffer = NULL;
 	
 	_Socket = other._Socket;
 	_Connected = other._Connected;
 	memcpy((void*)&_ServerAddress, (void*)&other._ServerAddress, sizeof(sockaddr_in));
+	_ServerPort = other._ServerPort;
 
 	if(other._PreFetchedBufferSize > 0)
 	{
@@ -140,7 +145,7 @@ bool Responder::connectSocket(int &returncode)
 	{
 		returncode = errno;
 		shutdown(_Socket,2);
-        close(_Socket);
+        closesocket(_Socket);
 		_Connected = false;
 
 		return false;
@@ -155,7 +160,7 @@ bool Responder::closeSocket()
     if(_Connected)
 	{
         shutdown(_Socket,0);
-        close(_Socket);
+		closesocket(_Socket);
 	}	
     _Connected = false;
 	return false;
