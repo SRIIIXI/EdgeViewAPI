@@ -71,22 +71,22 @@ void HttpHandler::handleHead(AbnfMessage *messagePtr, AbnfAdapter *sourceDevice)
 
 void HttpHandler::handleGet(AbnfMessage *messagePtr, AbnfAdapter *sourceDevice)
 {
-    if(urlContent != NULL)
+    if(url_content != NULL)
     {
-        delete urlContent;
-        urlContent = NULL;
-        contentLength = 0;
+        delete url_content;
+        url_content = NULL;
+        content_length = 0;
     }
 
 	char *httpbody = NULL;
 	int httplen = 0;
-	String httpheader;
+	std::string httpheader;
 	char buffer[1024];
-    String contenttag ="";
+	std::string contenttag ="";
 
     if(loadContent(messagePtr->getURL()))
 	{
-        contenttag = contentTypeTag;
+        contenttag = content_type_tag;
 
         printf("[HTTPServerLite]: %s\n\n",contenttag.c_str());
 
@@ -102,12 +102,12 @@ void HttpHandler::handleGet(AbnfMessage *messagePtr, AbnfAdapter *sourceDevice)
 		sprintf(buffer,"Server: ggnhnb745.in002.siemens.net\r\n%c",'\0');
 		httpheader += buffer;	
 
-        sprintf(buffer,"Content-Length: %ld\r\n\r\n%c",contentLength,'\0');
+        sprintf(buffer,"Content-Length: %ld\r\n\r\n%c",content_length,'\0');
 		httpheader += buffer;
 	}
 	else
 	{
-		String notFound ="<html><head><title>Not Found</title></head><body lang=EN-US><div class=Section1><p class=MsoNormal>404 Requested URL \"";
+		std::string notFound ="<html><head><title>Not Found</title></head><body lang=EN-US><div class=Section1><p class=MsoNormal>404 Requested URL \"";
         notFound += messagePtr->getURL();
 		notFound +=	"\" not found</p></div></body></html>";
 		long messageLen = notFound.length();
@@ -135,17 +135,17 @@ void HttpHandler::handleGet(AbnfMessage *messagePtr, AbnfAdapter *sourceDevice)
 	int headerlen = httpheader.length();
     sourceDevice->getResponder()->sendBuffer(httpheader.c_str(), headerlen);
 
-    if(contentLength > 0)
+    if(content_length > 0)
 	{
-        int blen = contentLength;
-        sourceDevice->getResponder()->sendBuffer(urlContent, blen);
+        int blen = content_length;
+        sourceDevice->getResponder()->sendBuffer(url_content, blen);
 	}
 
-    if(urlContent != NULL)
+    if(url_content != NULL)
     {
-        delete urlContent;
-        urlContent = NULL;
-        contentLength = 0;
+        delete url_content;
+        url_content = NULL;
+        content_length = 0;
     }
 
 	if(httpbody != NULL)

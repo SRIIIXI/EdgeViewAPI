@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     sdlr.registerCallbackClient(&lstnr);
 
     ProcessLock plk;
-    String un;
+    std::string un;
 
     plk.getUserName(un);
 
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    String lfile;
+    std::string lfile;
     plk.getLockFileName(lfile);
     if(!plk.lockProcess(lfile))
     {

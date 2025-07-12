@@ -41,8 +41,8 @@ protected:
     void userdefined2();
 
 private:
-    SOCKET _listenerSocket;
-    ApplicationCallback*   _callbackPtr;
+    SOCKET listener_socket;
+    ApplicationCallback*   callback_ptr;
 };
 
 }

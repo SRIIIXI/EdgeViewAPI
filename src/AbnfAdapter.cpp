@@ -1,54 +1,63 @@
 #include "AbnfAdapter.hpp"
 #include "Responder.hpp"
 
+typedef struct ThreadReference
+{
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+    HANDLE thread_object;
+#else
+    pthread_t thread_object;
+#endif
+}ThreadReference;
+
 AbnfAdapter::AbnfAdapter()
 {
-	m_ResponderPtr = NULL;
+	responder_ptr = NULL;
 }
 
 AbnfAdapter::AbnfAdapter(Responder *inResponder)
 {
-	if(m_ResponderPtr)
+	if(responder_ptr)
 	{
-		delete m_ResponderPtr;
+		delete responder_ptr;
 	}
 	
-	m_ResponderPtr = new Responder();
+	responder_ptr = new Responder();
 
-	m_ResponderPtr = inResponder;
-	registerResponder(m_ResponderPtr);
+	responder_ptr = inResponder;
+	registerResponder(responder_ptr);
 }
 
 AbnfAdapter::AbnfAdapter(SOCKET inSocket)
 {
-	if(m_ResponderPtr)
+	if(responder_ptr)
 	{
-		delete m_ResponderPtr;
+		delete responder_ptr;
 	}
 	
-	m_ResponderPtr = new Responder();
+	responder_ptr = new Responder();
 
-    m_ResponderPtr->createSocket(inSocket);
-	registerResponder(m_ResponderPtr);
+    responder_ptr->createSocket(inSocket);
+	registerResponder(responder_ptr);
 }
 
 bool AbnfAdapter::createClientAdapter(const char* host, int port)
 {
-	if(m_ResponderPtr)
+	if(responder_ptr)
 	{
-		delete m_ResponderPtr;
+		delete responder_ptr;
 	}
 
-	m_ResponderPtr = new Responder();
+	responder_ptr = new Responder();
 
-    if(!m_ResponderPtr->createSocket(host, port))
+    if(!responder_ptr->createSocket(host, port))
     {
         return false;
     }
 
     int errcode = -1;
 
-    if(!m_ResponderPtr->connectSocket(errcode))
+    if(!responder_ptr->connectSocket(errcode))
     {
         return false;
     }
@@ -59,17 +68,23 @@ bool AbnfAdapter::createClientAdapter(const char* host, int port)
 
 AbnfAdapter::~AbnfAdapter()
 {
-    if(m_ReceiverThread)
-        pthread_cancel(m_ReceiverThread);
+    if (thread_reference->thread_object)
+    {
+        #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+                SuspendThread(thread_reference->thread_object);
+                TerminateThread(thread_reference->thread_object, 0);
+                CloseHandle(thread_reference->thread_object);
+        #else
+                pthread_cancel(thread_reference->thread_object);
+        #endif
+
+        delete thread_reference;
+        thread_reference = NULL;    
+    }
 }
 
 bool AbnfAdapter::OnMessage(const void* data)
 {
-    //if(m_ObserverPtr)
-    //{
-    //    m_ObserverPtr->handleNotification((void*)data,this);
-    //}
-
     char buffer[1024] = {0};
     std::string httpheader;
     std::string contenttag = "text/html";
@@ -98,35 +113,35 @@ bool AbnfAdapter::OnMessage(const void* data)
     sprintf(buffer,"Content-Length: %ld\r\n\r\n%c",contentLength,'\0');
     httpheader += buffer;
 
-    m_ResponderPtr->sendBuffer(httpheader);
-    m_ResponderPtr->sendBuffer(httpbody);
+    responder_ptr->sendBuffer(httpheader);
+    responder_ptr->sendBuffer(httpbody);
 
     return true;
 }
 
 bool AbnfAdapter::sendPacket(const char* data, int len)
 {
-	if(!m_ResponderPtr)
+	if(!responder_ptr)
 	{
 		return false;
 	}
 
-    if(!m_ResponderPtr->isConnected())
+    if(!responder_ptr->isConnected())
 	{
 		return false;
 	}
 
-    return m_ResponderPtr->sendBuffer(data,len);
+    return responder_ptr->sendBuffer(data,len);
 }
 
 bool AbnfAdapter::sendAbnfPacket(AbnfMessage &message)
 {
-	if(!m_ResponderPtr)
+	if(!responder_ptr)
 	{
 		return false;
 	}
 
-    if(!m_ResponderPtr->isConnected())
+    if(!responder_ptr->isConnected())
     {
         return false;
     }
@@ -134,18 +149,18 @@ bool AbnfAdapter::sendAbnfPacket(AbnfMessage &message)
     std::string data;
     message.serialize(data);
     int len = data.length();
-    return m_ResponderPtr->sendBuffer(data.c_str(), len);
+    return responder_ptr->sendBuffer(data.c_str(), len);
 }
 
 bool AbnfAdapter::receiveAbnfPacket(AbnfMessage &message)
 {
-	if(!m_ResponderPtr)
+	if(!responder_ptr)
 	{
 		return false;
 	}
 
     std::string header;
-    if(m_ResponderPtr->receiveString(header,(char*)"\r\n\r\n"))
+    if(responder_ptr->receiveString(header,(char*)"\r\n\r\n"))
     {
         message.setHeader(header.c_str());
         message.deSerialize();
@@ -159,10 +174,10 @@ bool AbnfAdapter::receiveAbnfPacket(AbnfMessage &message)
             buffer = new char[len+1];
             memset(buffer,0,len+1);
 
-            if(m_ResponderPtr->receiveBuffer(buffer,len))
+            if(responder_ptr->receiveBuffer(buffer,len))
             {
                 message.attachBody(buffer);
-                delete buffer;
+                delete [] buffer;
                 buffer = NULL;
             }
             else
@@ -184,9 +199,9 @@ bool AbnfAdapter::invokeHandler()
 {
 	while(true)
 	{
-        if(receiveAbnfPacket(_Message))
+        if(receiveAbnfPacket(message))
         {
-            OnMessage((void*)&_Message);
+            OnMessage((void*)&message);
         }
 		else
 		{
@@ -198,49 +213,57 @@ bool AbnfAdapter::invokeHandler()
 
 void AbnfAdapter::registerResponder(Responder *inResponder)
 {
-	m_ResponderPtr = inResponder;
+	responder_ptr = inResponder;
 }
 
 bool AbnfAdapter::startResponder()
 {
-    memset(&m_ReceiverThread,0,sizeof(m_ReceiverThread));
+    thread_reference = new ThreadReference;
+    memset(&thread_reference->thread_object,0,sizeof(ThreadReference::thread_object));
 
-    m_ReceiverTID = pthread_create(&m_ReceiverThread, NULL,&(AbnfAdapter::receiverThreadFunction),(void*)this);
-    if(m_ReceiverTID !=0)
-    {
-        return false;
-    }
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+        thread_reference->thread_object = CreateThread(NULL, NULL, &AbnfAdapter::receiverThreadFunction, (LPVOID)this, CREATE_SUSPENDED, &receiver_id);
+        if (thread_reference->thread_object == NULL)
+        {
+            return false;
+        }
+        ResumeThread(thread_reference->thread_object);
+    #else
+        receiver_id = pthread_create(&thread_reference->thread_object, NULL,&(AbnfAdapter::receiverThreadFunction),(void*)this);
+        if(receiver_id !=0)
+        {
+            return false;
+        }
+    #endif
 
     return true;
 }
 
 bool AbnfAdapter::releaseResponder()
 {
-    return m_ResponderPtr->closeSocket();
+    return responder_ptr->closeSocket();
 }
 
 char* AbnfAdapter::getDeviceName()
 {
-	return &m_DeviceName[0];
+	return &device_name[0];
 }
 
 Responder* AbnfAdapter::getResponder()
 {
-	return m_ResponderPtr;
+	return responder_ptr;
 }
 
 
 void AbnfAdapter::setDeviceName(const char* name)
 {
-	strcpy(m_DeviceName,name);
+	strcpy(device_name,name);
 }
 
-void* AbnfAdapter::receiverThreadFunction(void *lpParameter)
+THREAD_PROC_RETURN_TYPE AbnfAdapter::receiverThreadFunction(void* lpParameter)
 {
-	AbnfAdapter* ptr = (AbnfAdapter*)lpParameter;
-
-	ptr->invokeHandler();
-
+    AbnfAdapter* ptr = (AbnfAdapter*)lpParameter;
+    ptr->invokeHandler();
 	return 0;
 }
 

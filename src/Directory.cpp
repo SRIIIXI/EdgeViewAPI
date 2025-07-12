@@ -33,7 +33,7 @@ void DirectoryHandler::getParentDirectory(char *ptr)
     }
 }
 
-void DirectoryHandler::getExtension(const char *ptr, String &str)
+void DirectoryHandler::getExtension(const char *ptr, std::string &str)
 {
     int i = 0;
     str="";
@@ -67,7 +67,7 @@ bool DirectoryHandler::fileExists(const char *ptr)
     return false;
 }
 
-void DirectoryHandler::getName(const char *ptr, String &str)
+void DirectoryHandler::getName(const char *ptr, std::string &str)
 {
     int i = 0;
     str="";
@@ -90,164 +90,106 @@ void DirectoryHandler::getName(const char *ptr, String &str)
 
 bool DirectoryHandler::isDirectory(const char *ptr)
 {
-    DIR *dirp;
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+        DWORD attr = GetFileAttributesA(ptr);
 
-    dirp = opendir(ptr);
-    if(dirp == NULL)
-    {
+        if (attr == INVALID_FILE_ATTRIBUTES)
+        {
+            return false;
+        }
+        return true;
+    #else
+
+        DIR *dirp;
+
+        dirp = opendir(ptr);
+        if(dirp == NULL)
+        {
+            closedir(dirp);
+            return false;
+        }
         closedir(dirp);
-        return false;
-    }
-    closedir(dirp);
-    return true;
+        return true;
+    #endif
 }
 
-void DirectoryHandler::getDirectoryList(const String &dirname, DirList &dlist)
+void DirectoryHandler::getDirectoryList(const std::string &dirname, std::vector<FileInfo> &dlist)
 {
-    DIR *dir;
-    struct dirent *dent;
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+    #else
+        DIR *dir;
+        struct dirent *dent;
 
-    String fullpath;
-    String str = dirname;
+        std::string fullpath;
+        std::string str = dirname;
 
-    if(str[str.length()-1]!='/')
-    {
-        str += "/";
-    }
-
-    fullpath = str;
-
-    dlist.clear();
-
-    dir = opendir(dirname.c_str());
-
-    if(dir != NULL)
-    {
-        while(true)
+        if(str[str.length()-1]!='/')
         {
-            dent = readdir(dir);
-            if(dent == NULL)
+            str += "/";
+        }
+
+        fullpath = str;
+
+        dlist.clear();
+
+        dir = opendir(dirname.c_str());
+
+        if(dir != NULL)
+        {
+            while(true)
             {
-                break;
-            }
-
-            if(dent->d_type == DT_DIR && (strcmp(dent->d_name,".")!=0 && strcmp(dent->d_name,"..")!=0))
-            {
-                FileInfo  finfo;
-                finfo.Name = dent->d_name;
-                finfo.FullPath = fullpath + finfo.Name;
-
-				struct stat filestat;
-				stat(finfo.FullPath.c_str(), &filestat);
-				time_t createtm = filestat.st_mtime;
-				time_t modifytm;
-				
-				if(filestat.st_ctime > filestat.st_mtime)
-				{
-					modifytm = filestat.st_mtime;
-				}
-				else
-				{
-					modifytm = filestat.st_ctime;
-				}
-
-				finfo.CreationTime.buildFromTimeT(createtm);
-				finfo.LastModifiedTime.buildFromTimeT(modifytm);
-
-                if( (strcmp(dent->d_name,".") == 0) || (strcmp(dent->d_name,"..") == 0) )
+                dent = readdir(dir);
+                if(dent == NULL)
                 {
-                    continue;
+                    break;
                 }
 
-                dlist.push_back(finfo);
-            }
-        }
-    }
-
-    closedir(dir);
-}
-
-void DirectoryHandler::getFileList(const String &dirname, DirList &dlist, const String &extension)
-{
-	/*
-    DIR *dir;
-    struct dirent *dent;
-
-    String fullpath;
-    String str = dirname;
-
-    if(str[str.length()-1]!='/')
-    {
-        str += "/";
-    }
-
-    fullpath = str;
-
-    dlist.clear();
-
-    dir = opendir(dirname.c_str());
-
-    if(dir != NULL)
-    {
-        while(true)
-        {
-            dent = readdir(dir);
-            if(dent == NULL)
-            {
-                break;
-            }
-
-            if(dent->d_type == DT_REG)
-            {
-                FileInfo  finfo;
-                finfo.Name = dent->d_name;
-                finfo.FullPath = fullpath + finfo.Name;
-
-                String ext;
-                getExtension(dent->d_name, ext);
-
-				struct stat filestat;
-				stat(finfo.FullPath.c_str(), &filestat);
-				time_t createtm = filestat.st_mtime;
-				time_t modifytm;
-				
-				if(filestat.st_ctime > filestat.st_mtime)
-				{
-					modifytm = filestat.st_mtime;
-				}
-				else
-				{
-					modifytm = filestat.st_ctime;
-				}
-
-				finfo.CreationTime.buildFromTimeT(createtm);
-				finfo.LastModifiedTime.buildFromTimeT(modifytm);
-
-                if(extension.empty() || extension == ".*")
+                if(dent->d_type == DT_DIR && (strcmp(dent->d_name,".")!=0 && strcmp(dent->d_name,"..")!=0))
                 {
+                    FileInfo  finfo;
+                    finfo.Name = dent->d_name;
+                    finfo.FullPath = fullpath + finfo.Name;
+
+				    struct stat filestat;
+				    stat(finfo.FullPath.c_str(), &filestat);
+				    time_t createtm = filestat.st_mtime;
+				    time_t modifytm;
+				
+				    if(filestat.st_ctime > filestat.st_mtime)
+				    {
+					    modifytm = filestat.st_mtime;
+				    }
+				    else
+				    {
+					    modifytm = filestat.st_ctime;
+				    }
+
+				    finfo.CreationTime.buildFromTimeT(createtm);
+				    finfo.LastModifiedTime.buildFromTimeT(modifytm);
+
+                    if( (strcmp(dent->d_name,".") == 0) || (strcmp(dent->d_name,"..") == 0) )
+                    {
+                        continue;
+                    }
+
                     dlist.push_back(finfo);
                 }
-                else
-                {
-                    if(extension == ext)
-                    {
-                        dlist.push_back(finfo);
-                    }
-                }
             }
         }
-    }
 
-    closedir(dir);
-	*/
+        closedir(dir);
+    #endif
+}
 
-	// Workaround for GCC 4.9 bug
-
+void DirectoryHandler::getFileList(const std::string &dirname, std::vector<FileInfo> &dlist, const std::string &extension)
+{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#else
 	DIR *dir = NULL;
     struct dirent *dent = NULL;
 
-    String fullpath;
-    String str = dirname;
+    std::string fullpath;
+    std::string str = dirname;
 
     if(str[str.length()-1]!='/')
     {
@@ -316,11 +258,16 @@ void DirectoryHandler::getFileList(const String &dirname, DirList &dlist, const 
 
 		closedir(dir);
     }
+#endif
 }
 
 void DirectoryHandler::createDirectory(const char *str)
 {
-    mkdir(str,S_IRWXU);
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+        mkdir(str);
+    #else
+        mkdir(str,S_IRWXU);
+    #endif
 }
 
 

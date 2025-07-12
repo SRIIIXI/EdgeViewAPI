@@ -63,18 +63,18 @@ private:
     void processLine(const char* line, std::string &field, std::string &value);
     void getLine(std::string &line);
 
-	std::string	m_RequestBuffer;
-    char*       m_Content;
-	bool		m_HasContent;
-	std::string	m_Request;
-	std::string	m_URL;
-	std::string	m_Protocol;
-	std::string	m_Version;
-	std::string	m_ResponseText;
-	std::string m_MessageLine;
-	long		m_ResponseCode;
-	long		m_MessageType;
-    int         _ContentSize;
+	std::string	request_buffer;
+    char*       http_content;
+	bool		has_content;
+	std::string	request;
+	std::string	http_url;
+	std::string	protocol;
+	std::string	version;
+	std::string	response_text;
+	std::string message_line;
+	long		response_code;
+	long		message_type;
+    int         content_size;
 };
 
 }

@@ -4,17 +4,17 @@ Timestamp::Timestamp()
 {
     time_t rawtime;
     time ( &rawtime );
-    timeinfo = *localtime(&rawtime);
+    time_info = *localtime(&rawtime);
 }
 
 Timestamp::Timestamp(time_t tinfo)
 {
-	timeinfo = *localtime(&tinfo);
+	time_info = *localtime(&tinfo);
 }
 
 Timestamp::Timestamp(const Timestamp& other)
 {
-    timeinfo = other.timeinfo;
+    time_info = other.time_info;
 }
 
 
@@ -22,7 +22,7 @@ Timestamp::Timestamp(const std::string str, const std::string format)
 {
     time_t rawtime;
     time ( &rawtime );
-    timeinfo = *localtime(&rawtime);
+    time_info = *localtime(&rawtime);
 
     if(str.length()!=14)
     {
@@ -39,48 +39,48 @@ Timestamp::Timestamp(const std::string str, const std::string format)
         pos = format.find("yy");
         if(pos!=std::string::npos)
         {
-            timeinfo.tm_year = atoi(str.substr(pos,2).c_str())+100;
+            time_info.tm_year = atoi(str.substr(pos,2).c_str())+100;
         }
     }
     else
     {
-        timeinfo.tm_year = atoi(str.substr(pos,4).c_str())-1900;
+        time_info.tm_year = atoi(str.substr(pos,4).c_str())-1900;
     }
 
     pos = format.find("MM");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_mon = atoi(str.substr(pos,2).c_str())-1;
+        time_info.tm_mon = atoi(str.substr(pos,2).c_str())-1;
     }
 
     pos = format.find("dd");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_mday = atoi(str.substr(pos,2).c_str());
+        time_info.tm_mday = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("hh");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_hour = atoi(str.substr(pos,2).c_str());
+        time_info.tm_hour = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("mm");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_min = atoi(str.substr(pos,2).c_str());
+        time_info.tm_min = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("ss");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_sec = atoi(str.substr(pos,2).c_str());
+        time_info.tm_sec = atoi(str.substr(pos,2).c_str());
     }
 }
 
 Timestamp::Timestamp(struct tm tinfo)
 {
-    timeinfo = tinfo;
+    time_info = tinfo;
 }
 
 
@@ -91,19 +91,19 @@ void Timestamp::fromString(const std::string str, const std::string format, Time
 
 void Timestamp::buildFromTm(const struct tm tmstruct)
 {
-	timeinfo = tmstruct;
+	time_info = tmstruct;
 }
 
 void Timestamp::buildFromTimeT(time_t tinfo)
 {
-	timeinfo = *localtime(&tinfo);
+	time_info = *localtime(&tinfo);
 }
 
 void Timestamp::buildFromString(const std::string str, const std::string format)
 {
     time_t rawtime;
     time ( &rawtime );
-    timeinfo = *localtime(&rawtime);
+    time_info = *localtime(&rawtime);
 
     if(str.length()!=14)
     {
@@ -120,42 +120,42 @@ void Timestamp::buildFromString(const std::string str, const std::string format)
         pos = format.find("yy");
         if(pos!=std::string::npos)
         {
-            timeinfo.tm_year = atoi(str.substr(pos,2).c_str())+100;
+            time_info.tm_year = atoi(str.substr(pos,2).c_str())+100;
         }
     }
     else
     {
-        timeinfo.tm_year = atoi(str.substr(pos,4).c_str())-1900;
+        time_info.tm_year = atoi(str.substr(pos,4).c_str())-1900;
     }
 
     pos = format.find("MM");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_mon = atoi(str.substr(pos,2).c_str())-1;
+        time_info.tm_mon = atoi(str.substr(pos,2).c_str())-1;
     }
 
     pos = format.find("dd");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_mday = atoi(str.substr(pos,2).c_str());
+        time_info.tm_mday = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("hh");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_hour = atoi(str.substr(pos,2).c_str());
+        time_info.tm_hour = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("mm");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_min = atoi(str.substr(pos,2).c_str());
+        time_info.tm_min = atoi(str.substr(pos,2).c_str());
     }
 
     pos = format.find("ss");
     if(pos!=std::string::npos)
     {
-        timeinfo.tm_sec = atoi(str.substr(pos,2).c_str());
+        time_info.tm_sec = atoi(str.substr(pos,2).c_str());
     }
 }
 
@@ -166,14 +166,14 @@ Timestamp::~Timestamp()
 
 Timestamp& Timestamp::operator=(const Timestamp& other)
 {
-    timeinfo = other.timeinfo;
+    time_info = other.time_info;
     return *this;
 }
 
 bool Timestamp::operator!=( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1!=t2)
     {
@@ -184,8 +184,8 @@ bool Timestamp::operator!=( const Timestamp& other)
 
 bool Timestamp::operator==( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1==t2)
     {
@@ -196,8 +196,8 @@ bool Timestamp::operator==( const Timestamp& other)
 
 bool Timestamp::operator>=( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1>=t2)
     {
@@ -208,8 +208,8 @@ bool Timestamp::operator>=( const Timestamp& other)
 
 bool Timestamp::operator<=( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1<=t2)
     {
@@ -220,8 +220,8 @@ bool Timestamp::operator<=( const Timestamp& other)
 
 bool Timestamp::operator>( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1>t2)
     {
@@ -232,8 +232,8 @@ bool Timestamp::operator>( const Timestamp& other)
 
 bool Timestamp::operator<( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     if(t1<t2)
     {
@@ -244,24 +244,24 @@ bool Timestamp::operator<( const Timestamp& other)
 
 Timestamp& Timestamp::operator+( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     t1 = t1+t2;
 
-    timeinfo = *localtime(&t1);
+    time_info = *localtime(&t1);
 
     return *this;
 }
 
 Timestamp& Timestamp::operator-( const Timestamp& other)
 {
-    time_t t1 = mktime(&timeinfo);
-    time_t t2 = mktime((tm*)&other.timeinfo);
+    time_t t1 = mktime(&time_info);
+    time_t t2 = mktime((tm*)&other.time_info);
 
     t1 = t1 - t2;
 
-    timeinfo = *localtime(&t1);
+    time_info = *localtime(&t1);
 
     return *this;
 }
@@ -341,12 +341,12 @@ std::string Timestamp::getDateString(const char *format)
 
     }
 
-	if(timeinfo.tm_year < 100)
+	if(time_info.tm_year < 100)
 	{
-		timeinfo.tm_year += 100;
+		time_info.tm_year += 100;
 	}
 
-    strftime(buffer,256,str.c_str(),&timeinfo);
+    strftime(buffer,256,str.c_str(),&time_info);
 
     return buffer;
 }
@@ -426,12 +426,12 @@ std::string Timestamp::getDateString()
 
     }
 
-	if(timeinfo.tm_year < 100)
+	if(time_info.tm_year < 100)
 	{
-		timeinfo.tm_year += 100;
+		time_info.tm_year += 100;
 	}
 
-    strftime(buffer,256,str.c_str(),&timeinfo);
+    strftime(buffer,256,str.c_str(),&time_info);
 
     return buffer;
 }
@@ -459,72 +459,72 @@ void Timestamp::addSeconds(int val)
     //t = t + val;
     //timeinfo = *localtime(&t);
 
-    timeinfo.tm_sec = timeinfo.tm_sec + val;
-    time_t t = mktime(&timeinfo);
-    timeinfo = *localtime(&t);
+    time_info.tm_sec = time_info.tm_sec + val;
+    time_t t = mktime(&time_info);
+    time_info = *localtime(&t);
 }
 
 int Timestamp::getDays()
 {
-    return timeinfo.tm_mday;
+    return time_info.tm_mday;
 }
 
 int Timestamp::getMonths()
 {
-    return timeinfo.tm_mon+1;
+    return time_info.tm_mon+1;
 }
 
 int Timestamp::getYears()
 {
-    return timeinfo.tm_year+1900;
+    return time_info.tm_year+1900;
 }
 
 int Timestamp::getHours()
 {
-    return timeinfo.tm_hour;
+    return time_info.tm_hour;
 }
 
 int Timestamp::getMinutes()
 {
-    return timeinfo.tm_min;
+    return time_info.tm_min;
 }
 
 int Timestamp::getSeconds()
 {
-    return timeinfo.tm_sec;
+    return time_info.tm_sec;
 }
 
 const struct tm* Timestamp::getTimeStruct()
 {
-	return &timeinfo;
+	return &time_info;
 }
 
 void Timestamp::setDay(int val)
 {
-    timeinfo.tm_mday = val;
+    time_info.tm_mday = val;
 }
 
 void Timestamp::setMonth(int val)
 {
-    timeinfo.tm_mon = val-1;
+    time_info.tm_mon = val-1;
 }
 
 void Timestamp::setYear(int val)
 {
-    timeinfo.tm_year = val-1900;
+    time_info.tm_year = val-1900;
 }
 
 void Timestamp::setHour(int val)
 {
-    timeinfo.tm_hour = val;
+    time_info.tm_hour = val;
 }
 
 void Timestamp::setMinute(int val)
 {
-    timeinfo.tm_min = val;
+    time_info.tm_min = val;
 }
 
 void Timestamp::setSecond(int val)
 {
-    timeinfo.tm_sec = val;
+    time_info.tm_sec = val;
 }

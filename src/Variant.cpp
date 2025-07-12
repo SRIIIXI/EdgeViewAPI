@@ -2,17 +2,17 @@
 
 Variant::Variant()
 {
-    dataType = Void;
-    memset((void*)&rawBuffer[0],0,256);
-    dataSize = 0;
+    variant_type = Void;
+    memset((void*)&raw_buffer[0],0,256);
+    data_size = 0;
 }
 
 Variant::Variant(const Variant& other)
 {
-    dataType = other.dataType;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer,other.rawBuffer, other.dataSize);
-    dataSize = other.dataSize;
+    variant_type = other.variant_type;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer,other.raw_buffer, other.data_size);
+    data_size = other.data_size;
 }
 
 Variant::~Variant()
@@ -21,18 +21,18 @@ Variant::~Variant()
 
 Variant::Variant(const char val)
 {
-    dataType = Char;
-    rawBuffer[0] = val;
-    rawBuffer[1] = 0;
-    dataSize = sizeof(char);
+    variant_type = Char;
+    raw_buffer[0] = val;
+    raw_buffer[1] = 0;
+    data_size = sizeof(char);
 }
 
 Variant::Variant(const unsigned char val)
 {
-    dataType = UnsignedChar;
-    rawBuffer[0] = val;
-    rawBuffer[1] = 0;
-    dataSize = sizeof(unsigned char);
+    variant_type = UnsignedChar;
+    raw_buffer[0] = val;
+    raw_buffer[1] = 0;
+    data_size = sizeof(unsigned char);
 }
 
 Variant::Variant(const char *val)
@@ -43,10 +43,10 @@ Variant::Variant(const char *val)
         sz = 255;
     }
 
-    dataType = AsciiString;
-    memset((void*)&rawBuffer[0],0,256);
-    strncpy((char*)&rawBuffer[0], val, sz);
-    dataSize = sz;
+    variant_type = AsciiString;
+    memset((void*)&raw_buffer[0],0,256);
+    strncpy((char*)&raw_buffer[0], val, sz);
+    data_size = sz;
 }
 
 Variant::Variant(const unsigned char* val, unsigned int &sz)
@@ -55,86 +55,86 @@ Variant::Variant(const unsigned char* val, unsigned int &sz)
     {
         sz = 255;
     }
-    dataType = Raw;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sz);
-    dataSize = sz;
+    variant_type = Raw;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sz);
+    data_size = sz;
 }
 
 Variant::Variant(const bool val)
 {
-    dataType = Boolean;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(bool));
-    dataSize = sizeof(bool);
+    variant_type = Boolean;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(bool));
+    data_size = sizeof(bool);
 }
 
 Variant::Variant(const long val)
 {
-    dataType = Number;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(long));
-    dataSize = sizeof(long);
+    variant_type = Number;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(long));
+    data_size = sizeof(long);
 }
 
 Variant::Variant(const unsigned long val)
 {
-    dataType = UnsignedNumber;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(unsigned long));
-    dataSize = sizeof(unsigned long);
+    variant_type = UnsignedNumber;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(unsigned long));
+    data_size = sizeof(unsigned long);
 }
 
 Variant::Variant(const double val)
 {
-    dataType = Decimal;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(double));
-    dataSize = sizeof(double);
+    variant_type = Decimal;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(double));
+    data_size = sizeof(double);
 }
 
 Variant::Variant(const tm val)
 {
-    dataType = TimeStamp;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(struct tm));
-    dataSize = sizeof(struct tm);
+    variant_type = TimeStamp;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(struct tm));
+    data_size = sizeof(struct tm);
 }
 
 VariantType Variant::getType()
 {
-    return dataType;
+    return variant_type;
 }
 
 void Variant::setType(VariantType vtype)
 {
-    dataType = vtype;
+    variant_type = vtype;
 }
 
 unsigned int Variant::getSize()
 {
-    return dataSize;
+    return data_size;
 }
 
 const void *Variant::getData()
 {
-    return &rawBuffer[0];
+    return &raw_buffer[0];
 }
 
 void Variant::setData(const char val)
 {
-    dataType = Char;
-    rawBuffer[0] = val;
-    rawBuffer[1] = 0;
-    dataSize = sizeof(char);
+    variant_type = Char;
+    raw_buffer[0] = val;
+    raw_buffer[1] = 0;
+    data_size = sizeof(char);
 }
 
 void Variant::setData(const unsigned char val)
 {
-    dataType = UnsignedChar;
-    rawBuffer[0] = val;
-    rawBuffer[1] = 0;
-    dataSize = sizeof(unsigned char);
+    variant_type = UnsignedChar;
+    raw_buffer[0] = val;
+    raw_buffer[1] = 0;
+    data_size = sizeof(unsigned char);
 }
 
 void Variant::setData(const char *val, bool trim)
@@ -145,33 +145,33 @@ void Variant::setData(const char *val, bool trim)
         sz = 255;
     }
 
-    dataType = AsciiString;
-    memset((void*)&rawBuffer[0],0,256);
-    strncpy((char*)&rawBuffer[0], val, sz);
+    variant_type = AsciiString;
+    memset((void*)&raw_buffer[0],0,256);
+    strncpy((char*)&raw_buffer[0], val, sz);
 
     if(trim)
     {
-        dataSize = strlen((char*)&rawBuffer[0]);
+        data_size = strlen((char*)&raw_buffer[0]);
 
-        if(dataSize<1)
+        if(data_size<1)
             return;
 
-        for(int i = dataSize-1;  ; i--)
+        for(int i = data_size-1;  ; i--)
         {
             if(i < 0)
             {
                 break;
             }
 
-            if(rawBuffer[i]>32 && rawBuffer[i]<127)
+            if(raw_buffer[i]>32 && raw_buffer[i]<127)
             {
                 break;
             }
 
-            rawBuffer[i] = '\0';
+            raw_buffer[i] = '\0';
         }
 
-        dataSize = strlen((char*)&rawBuffer[0]);
+        data_size = strlen((char*)&raw_buffer[0]);
     }
 }
 
@@ -181,50 +181,50 @@ void Variant::setData(const unsigned char* val, int &sz)
     {
         sz = 255;
     }
-    dataType = Raw;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sz);
-    dataSize = sz;
+    variant_type = Raw;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sz);
+    data_size = sz;
 }
 
 void Variant::setData(const bool val)
 {
-    dataType = Boolean;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(bool));
-    dataSize = sizeof(bool);
+    variant_type = Boolean;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(bool));
+    data_size = sizeof(bool);
 }
 
 void Variant::setData(const long val)
 {
-    dataType = Number;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(long));
-    dataSize = sizeof(long);
+    variant_type = Number;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(long));
+    data_size = sizeof(long);
 }
 
 void Variant::setData(const unsigned long val)
 {
-    dataType = UnsignedNumber;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(unsigned long));
-    dataSize = sizeof(unsigned long);
+    variant_type = UnsignedNumber;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(unsigned long));
+    data_size = sizeof(unsigned long);
 }
 
 void Variant::setData(const double val)
 {
-    dataType = Decimal;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(double));
-    dataSize = sizeof(double);
+    variant_type = Decimal;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(double));
+    data_size = sizeof(double);
 }
 
 void Variant::setData(const tm val)
 {
-    dataType = TimeStamp;
-    memset((void*)&rawBuffer[0],0,256);
-    memcpy(rawBuffer, &val, sizeof(struct tm));
-    dataSize = sizeof(struct tm);
+    variant_type = TimeStamp;
+    memset((void*)&raw_buffer[0],0,256);
+    memcpy(raw_buffer, &val, sizeof(struct tm));
+    data_size = sizeof(struct tm);
 }
 
 void Variant::getString(std::string &str)
@@ -234,23 +234,23 @@ void Variant::getString(std::string &str)
     char ptr[255];
     memset((void*)&ptr[0],0,255);
 
-    switch(dataType)
+    switch(variant_type)
     {
         case Char:
         {
-            sprintf(ptr,"%c", rawBuffer[0]);
+            sprintf(ptr,"%c", raw_buffer[0]);
             str = ptr;
             break;
         }
         case UnsignedChar:
         {
-            sprintf(ptr,"%c",(char)rawBuffer[0]);
+            sprintf(ptr,"%c",(char)raw_buffer[0]);
             str = ptr;
             break;
         }
         case AsciiString:
         {
-            str = (char*)&rawBuffer[0];
+            str = (char*)&raw_buffer[0];
             break;
         }
         case Boolean:
@@ -291,7 +291,7 @@ void Variant::getString(std::string &str)
         }
         case Raw:
         {
-            str = (char*)&rawBuffer[0];
+            str = (char*)&raw_buffer[0];
             break;
         }
         case Void:
@@ -309,10 +309,10 @@ void Variant::getString(std::string &str)
 
 long Variant::getSignedNumber()
 {
-    if(dataType == Number)
+    if(variant_type == Number)
     {
         long temp;
-        memcpy((void*)&temp, (void*)&rawBuffer[0], sizeof(long));
+        memcpy((void*)&temp, (void*)&raw_buffer[0], sizeof(long));
         return temp;
     }
 
@@ -321,10 +321,10 @@ long Variant::getSignedNumber()
 
 unsigned long Variant::getUnsignedNumber()
 {
-    if(dataType == Number)
+    if(variant_type == Number)
     {
         unsigned long temp;
-        memcpy((void*)&temp, (void*)&rawBuffer[0], sizeof(unsigned long));
+        memcpy((void*)&temp, (void*)&raw_buffer[0], sizeof(unsigned long));
         return temp;
     }
 
@@ -333,10 +333,10 @@ unsigned long Variant::getUnsignedNumber()
 
 double Variant::getReal()
 {
-    if(dataType == Decimal)
+    if(variant_type == Decimal)
     {
         double temp;
-        memcpy((void*)&temp, (void*)&rawBuffer[0], sizeof(double));
+        memcpy((void*)&temp, (void*)&raw_buffer[0], sizeof(double));
         return temp;
     }
 
@@ -345,10 +345,10 @@ double Variant::getReal()
 
 bool Variant::getBoolean()
 {
-    if(dataType == Boolean)
+    if(variant_type == Boolean)
     {
         bool temp;
-        memcpy((void*)&temp, (void*)&rawBuffer[0], sizeof(bool));
+        memcpy((void*)&temp, (void*)&raw_buffer[0], sizeof(bool));
         return temp;
     }
     return false;
@@ -357,14 +357,14 @@ bool Variant::getBoolean()
 
 Timestamp Variant::getTimestamp()
 {
-    if(dataType != TimeStamp)
+    if(variant_type != TimeStamp)
     {
         Timestamp ts;
         return ts;
     }
 
     struct tm temp;
-    memcpy((void*)&temp, (void*)&rawBuffer[0], sizeof(struct tm));
+    memcpy((void*)&temp, (void*)&raw_buffer[0], sizeof(struct tm));
 
     Timestamp ts(temp);
     return ts;
@@ -372,9 +372,9 @@ Timestamp Variant::getTimestamp()
 
 char Variant::getSignedChar()
 {
-    if(dataType == Char || dataType == AsciiString)
+    if(variant_type == Char || variant_type == AsciiString)
     {
-        return rawBuffer[0];
+        return raw_buffer[0];
     }
 
     return '\0';

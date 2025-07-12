@@ -9,14 +9,14 @@ class ProcessLock
 public:
     ProcessLock();
     virtual ~ProcessLock();
-    bool lockProcess(String &lockfileame);
-    void getLockFileName(String &lockfileame);
-    void getUserName(String &uName);
+    bool lockProcess(std::string&lockfileame);
+    void getLockFileName(std::string&lockfileame);
+    void getUserName(std::string&uName);
 private:
-    void getProcessName(String &processName);
-    void getTempDir(String &dirName);
-    int _LockFile;
-    String _LockFileName;
+    void getProcessName(std::string&processName);
+    void getTempDir(std::string&dirName);
+    int lock_file_id;
+    std::string lock_filename;
 };
 
 #endif

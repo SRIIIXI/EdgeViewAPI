@@ -32,13 +32,13 @@ public:
 
     int pendingPreFetchedBufferSize();
 private:
-    bool				_Connected;
-    SOCKET				_Socket;
-    sockaddr_in			_ServerAddress;
-    std::string			_ServerName;
-    int					_ServerPort;
-    int					_PreFetchedBufferSize;
-    unsigned char*		_PreFetchedBuffer;
+    bool				is_connected;
+    SOCKET				socket_handle;
+    sockaddr_in			server_address;
+    std::string			server_name;
+    int					server_port;
+    int					pre_fetched_buffer_size;
+    unsigned char*		pre_fetched_buffer;
 };
 
 typedef Responder Client;

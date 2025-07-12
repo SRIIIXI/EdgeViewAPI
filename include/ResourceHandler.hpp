@@ -18,7 +18,7 @@ public:
     virtual bool userDataFunction(const void* ptr, long len)=0;
     void setServerRoot(const char* serverRoot);
     void setServerAddress(const char* serveraddr);
-    String	serverAddress, strServerRoot;
+    std::string	serverAddress, strServerRoot;
 };
 
 class ResourceHandler
@@ -34,14 +34,14 @@ public:
     virtual void handleProtocol(AbnfMessage* message, Responder* sourceDevice)=0;
     virtual void handleProtocol(AbnfMessage* message)=0;
 protected:
-    String	serverAddress;
-    long contentLength;
-    char *urlContent;
-    String contentTypeTag;
-    ContentType contentype;
-    String	strServerRoot, resolvedURL, resolvedFileName, rootDocument;
+    std::string	server_address;
+    long content_length;
+    char *url_content;
+    std::string content_type_tag;
+    ContentType content_type;
+    std::string	server_root, resolved_url, resolved_filename, root_document;
 private:
-    FILE*	fileDescriptor;
+    FILE*	file_descriptor;
 };
 
 }

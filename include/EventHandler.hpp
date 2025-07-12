@@ -34,7 +34,7 @@ public:
     void userdefined1();
     void userdefined2();
 private:
-    String _sessionUser;
+    std::string session_user;
     bool logverbose;
 };
 

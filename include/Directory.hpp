@@ -6,21 +6,17 @@
 #include "Timestamp.hpp"
 
 using namespace std;
-typedef std::string String;
 
 extern "C"
 {
 
-class FileInfo
+typedef struct FileInfo
 {
-public:
-    String Name;
-    String FullPath;
+    std::string Name;
+    std::string FullPath;
 	Timestamp CreationTime;
 	Timestamp LastModifiedTime;
-};
-
-typedef std::vector<FileInfo> DirList;
+}FileInfo;
 
 #define DIRECTORY_SEPARATOR '/'
 
@@ -30,12 +26,12 @@ public:
     DirectoryHandler();
     ~DirectoryHandler();
     static void getParentDirectory(char *ptr);
-    static void getExtension(const char *ptr, String &str);
-    static void getName(const char *ptr, String &str);
+    static void getExtension(const char *ptr, std::string &str);
+    static void getName(const char *ptr, std::string &str);
     static bool isDirectory(const char *ptr);
     static bool fileExists(const char *ptr);
-    static void getDirectoryList(const String &dirname, DirList &dlist);
-    static void getFileList(const String &dirname, DirList &dlist, const String &extension);
+    static void getDirectoryList(const std::string &dirname, std::vector<FileInfo> &dlist);
+    static void getFileList(const std::string &dirname, std::vector<FileInfo> &dlist, const std::string &extension);
     static void createDirectory(const char *str);
 };
 

@@ -14,19 +14,19 @@ class Configuration
 public:
     Configuration();
     ~Configuration();
-    void setFileName(String fname);
-    void setDirectory(String dname);
+    void setFileName(std::string fname);
+    void setDirectory(std::string dname);
     bool loadConfiguration();
-    bool loadCustomConfiguration(const String &configFile);
-    std::string getValue(const String &section, const String &settingKey, const String defval="");
-    bool isSection(const String &section);
+    bool loadCustomConfiguration(const std::string&configFile);
+    std::string getValue(const std::string&section, const std::string&settingKey, const std::string defval="");
+    bool isSection(const std::string&section);
 private:
-    bool loadConfiguration(const String &configFile);
-    void addSection(String &str, const key_value_list &list);
+    bool loadConfiguration(const std::string&configFile);
+    void addSection(std::string&str, const std::map<std::string, std::string>&list);
     StringHandler _StrHdl;
-    std::map<String,key_value_list> _ConfigurationMap;
-    String _ConfigFileName;
-    String _ConfigDirName;
+    std::map<std::string, std::map<std::string, std::string>> configuration_map;
+    std::string configuration_filename;
+    std::string configuration_directory;
 };
 
 }

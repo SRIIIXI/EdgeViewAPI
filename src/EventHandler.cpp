@@ -5,7 +5,7 @@ char logbuffer[128]={0};
 EventHandler::EventHandler()
 {
     ProcessLock pl;
-    pl.getUserName(_sessionUser);
+    pl.getUserName(session_user);
     logverbose = false;
 }
 
@@ -25,17 +25,17 @@ bool EventHandler::eventGet(const char* url, char **appdata, long &datasize, cha
     *ctype = NULL;
     datasize = 0;
 
-    String reportmonth;
-    String name, extn;
+    std::string reportmonth;
+    std::string name, extn;
 
-    String resolvedURL = url;
+    std::string resolvedURL = url;
 
     if(strcmp(resolvedURL.c_str(),"/")==0)
     {
         return false;
     }
 
-    string_list tokenlist;
+    std::vector<std::string> tokenlist;
     // Adjust for leading '/' while splitting the token
     StringHandler::split((const char*)url+1, tokenlist, '/');
 
@@ -44,9 +44,9 @@ bool EventHandler::eventGet(const char* url, char **appdata, long &datasize, cha
         return false;
     }
 
-    String resolvedFileName = strServerRoot;
+    std::string resolvedFileName = server_root;
 
-    if(url[0]=='/' && strServerRoot[strServerRoot.length()-1]=='/')
+    if(url[0]=='/' && server_root[server_root.length()-1]=='/')
     {
         resolvedFileName += url+1;
     }
@@ -61,7 +61,7 @@ bool EventHandler::eventGet(const char* url, char **appdata, long &datasize, cha
     if(pos >= 0)
     {
         resolvedFileName[pos]='\0';
-        String temp, args, val;
+        std::string temp, args, val;
         StringHandler::split(resolvedURL, '?', temp, args);
         resolvedURL = temp;
         StringHandler::replace(resolvedURL, "/", "");

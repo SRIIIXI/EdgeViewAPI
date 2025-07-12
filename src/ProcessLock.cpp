@@ -2,27 +2,27 @@
 
 ProcessLock::ProcessLock()
 {
-    _LockFile = 0;
+    lock_file_id = 0;
 }
 
-bool ProcessLock::lockProcess(String &lockfileame)
+bool ProcessLock::lockProcess(std::string &lockfileame)
 {
-    getLockFileName(_LockFileName);
-    if(_LockFile != 0 && _LockFile != -1)
+    getLockFileName(lock_filename);
+    if(lock_file_id != 0 && lock_file_id != -1)
     {
         //File is already open
         return false;
     }
 
-    _LockFile = open(_LockFileName.c_str(), O_CREAT|O_RDWR, 0666);
-    if(_LockFile != -1)
+    lock_file_id = open(lock_filename.c_str(), O_CREAT|O_RDWR, 0666);
+    if(lock_file_id != -1)
     {
         off_t sz = 0;
-        int rc = lockf(_LockFile, F_TLOCK, sz);
+        int rc = lockf(lock_file_id, F_TLOCK, sz);
         if(rc == -1)
         {
-            close(_LockFile);
-            _LockFile = 0;
+            close(lock_file_id);
+            lock_file_id = 0;
             if(EAGAIN == errno || EACCES == errno)
             {
             }
@@ -33,21 +33,21 @@ bool ProcessLock::lockProcess(String &lockfileame)
         }
 
         // Okay! We got a lock
-        lockfileame = _LockFileName;
+        lockfileame = lock_filename;
         return true;
     }
     else
     {
-        _LockFile = 0;
+        lock_file_id = 0;
         return false;
     }
 
     return false;
 }
 
-void ProcessLock::getLockFileName(String &lockfileame)
+void ProcessLock::getLockFileName(std::string &lockfileame)
 {
-    String procname, uname, tmpdir;
+    std::string procname, uname, tmpdir;
     getProcessName(procname);
     getUserName(uname);
     getTempDir(tmpdir);
@@ -63,10 +63,10 @@ void ProcessLock::getLockFileName(String &lockfileame)
 
 ProcessLock::~ProcessLock()
 {
-    close(_LockFile);
+    close(lock_file_id);
 }
 
-void ProcessLock::getProcessName(String &processName)
+void ProcessLock::getProcessName(std::string &processName)
 {
     FILE *pipein_fp;
     char readbuf[80];
@@ -114,7 +114,7 @@ void ProcessLock::getProcessName(String &processName)
             continue;
         }
 
-        std::vector<String> strlist;
+        std::vector<std::string> strlist;
         StringHandler::split(readbuf, strlist, " ");
 
         if(strlist.size() < 2)
@@ -132,7 +132,7 @@ void ProcessLock::getProcessName(String &processName)
     pclose(pipein_fp);
 }
 
-void ProcessLock::getUserName(String &uName)
+void ProcessLock::getUserName(std::string &uName)
 {
 //    register struct passwd *pw;
 //    register uid_t uid;
@@ -148,7 +148,7 @@ void ProcessLock::getUserName(String &uName)
     uName = getenv("USER");
 }
 
-void ProcessLock::getTempDir(String &dirName)
+void ProcessLock::getTempDir(std::string &dirName)
 {
     dirName = "/tmp";
 }

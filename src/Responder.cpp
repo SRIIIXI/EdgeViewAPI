@@ -3,63 +3,63 @@
 
 Responder::Responder()
 {
-    _Socket = 0;
-    _Connected = false;
-    memset((void*)&_ServerAddress,0,sizeof(sockaddr_in));
-    _PreFetchedBufferSize = 0;
-    _PreFetchedBuffer = NULL;
-	_ServerName.clear();
-	_ServerPort = 0;
+    socket_handle = 0;
+    is_connected = false;
+    memset((void*)&server_address,0,sizeof(sockaddr_in));
+    pre_fetched_buffer_size = 0;
+    pre_fetched_buffer = NULL;
+	server_name.clear();
+	server_port = 0;
 }
 
 Responder::Responder(const Responder& other)
 {
-    memset((void*)&_ServerAddress,0,sizeof(sockaddr_in));
+    memset((void*)&server_address,0,sizeof(sockaddr_in));
 
-    _PreFetchedBufferSize = 0;
+    pre_fetched_buffer_size = 0;
 
-	if(_PreFetchedBuffer != NULL)
+	if(pre_fetched_buffer != NULL)
 	{
-		delete _PreFetchedBuffer;
+		delete pre_fetched_buffer;
 	}
 
-	_PreFetchedBuffer = NULL;
+	pre_fetched_buffer = NULL;
 	
-	_Socket = other._Socket;
-	_Connected = other._Connected;
-	memcpy((void*)&_ServerAddress, (void*)&other._ServerAddress, sizeof(sockaddr_in));
-	_ServerPort = other._ServerPort;
+	socket_handle = other.socket_handle;
+	is_connected = other.is_connected;
+	memcpy((void*)&server_address, (void*)&other.server_address, sizeof(sockaddr_in));
+	server_port = other.server_port;
 
-	if(other._PreFetchedBufferSize > 0)
+	if(other.pre_fetched_buffer_size > 0)
 	{
-		_PreFetchedBuffer = new unsigned char[other._PreFetchedBufferSize];
-		_PreFetchedBufferSize = other._PreFetchedBufferSize;
-		memcpy((unsigned char*)&_PreFetchedBuffer, (unsigned char*)&other._PreFetchedBuffer, _PreFetchedBufferSize);
+		pre_fetched_buffer = new unsigned char[other.pre_fetched_buffer_size];
+		pre_fetched_buffer_size = other.pre_fetched_buffer_size;
+		memcpy((unsigned char*)&pre_fetched_buffer, (unsigned char*)&other.pre_fetched_buffer, pre_fetched_buffer_size);
 	}
 }
 
 Responder& Responder::operator=( const Responder& other)
 {
-	 memset((void*)&_ServerAddress,0,sizeof(sockaddr_in));
+	 memset((void*)&server_address,0,sizeof(sockaddr_in));
 
-    _PreFetchedBufferSize = 0;
+    pre_fetched_buffer_size = 0;
 
-	if(_PreFetchedBuffer != NULL)
+	if(pre_fetched_buffer != NULL)
 	{
-		delete _PreFetchedBuffer;
+		delete pre_fetched_buffer;
 	}
-	_PreFetchedBuffer = NULL;
+	pre_fetched_buffer = NULL;
 	
-	_Socket = other._Socket;
-	_Connected = other._Connected;
-	memcpy((void*)&_ServerAddress, (void*)&other._ServerAddress, sizeof(sockaddr_in));
-	_ServerPort = other._ServerPort;
+	socket_handle = other.socket_handle;
+	is_connected = other.is_connected;
+	memcpy((void*)&server_address, (void*)&other.server_address, sizeof(sockaddr_in));
+	server_port = other.server_port;
 
-	if(other._PreFetchedBufferSize > 0)
+	if(other.pre_fetched_buffer_size > 0)
 	{
-		_PreFetchedBuffer = new unsigned char[other._PreFetchedBufferSize];
-		_PreFetchedBufferSize = other._PreFetchedBufferSize;
-		memcpy((unsigned char*)&_PreFetchedBuffer, (unsigned char*)&other._PreFetchedBuffer, _PreFetchedBufferSize);
+		pre_fetched_buffer = new unsigned char[other.pre_fetched_buffer_size];
+		pre_fetched_buffer_size = other.pre_fetched_buffer_size;
+		memcpy((unsigned char*)&pre_fetched_buffer, (unsigned char*)&other.pre_fetched_buffer, pre_fetched_buffer_size);
 	}
 
 	return *this;
@@ -72,19 +72,19 @@ Responder::~Responder()
 	{
 	}
 
-    if(_PreFetchedBuffer != NULL)
+    if(pre_fetched_buffer != NULL)
     {
-        delete _PreFetchedBuffer;
+        delete pre_fetched_buffer;
     }
 }
 
 bool Responder::createSocket(const char* servername, int serverport)
 {
-    _ServerName = servername;
-    _ServerPort = serverport;
+    server_name = servername;
+    server_port = serverport;
 
-    _ServerAddress.sin_family = AF_INET;
-    _ServerAddress.sin_port = htons(serverport);
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(serverport);
     u_long nRemoteAddr;
 
     char ipbuffer[32]={0};
@@ -94,28 +94,28 @@ bool Responder::createSocket(const char* servername, int serverport)
 
     if(!ip)
     {
-        nRemoteAddr = inet_addr(_ServerName.c_str());
+        nRemoteAddr = inet_addr(server_name.c_str());
         if (nRemoteAddr == INADDR_NONE)
         {
-            hostent* pHE = gethostbyname(_ServerName.c_str());
+            hostent* pHE = gethostbyname(server_name.c_str());
             if (pHE == 0)
             {
                 nRemoteAddr = INADDR_NONE;
                 return false;
             }
             nRemoteAddr = *((u_long*)pHE->h_addr_list[0]);
-            _ServerAddress.sin_addr.s_addr = nRemoteAddr;
+            server_address.sin_addr.s_addr = nRemoteAddr;
         }
     }
     else
     {
-        inet_pton (AF_INET, _ServerName.c_str(), &_ServerAddress.sin_addr);
+        inet_pton (AF_INET, server_name.c_str(), &server_address.sin_addr);
     }
 
 
-    _Socket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+    socket_handle = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
-    if(_Socket == INVALID_SOCKET)
+    if(socket_handle == INVALID_SOCKET)
     {
         return false;
     }
@@ -126,43 +126,43 @@ bool Responder::createSocket(const char* servername, int serverport)
 
 bool Responder::createSocket(SOCKET inSocket)
 {
-    _Socket = inSocket;
-    _Connected = true;
+    socket_handle = inSocket;
+    is_connected = true;
 	return true;
 }
 
 
 bool Responder::connectSocket(int &returncode)
 {
-    if(_Connected == true)
+    if(is_connected == true)
 	{
 		return true;
 	}
 
-	returncode = connect(_Socket,(sockaddr*)&_ServerAddress, sizeof(sockaddr_in));
+	returncode = connect(socket_handle,(sockaddr*)&server_address, sizeof(sockaddr_in));
 
     if(returncode == SOCKET_ERROR)
 	{
 		returncode = errno;
-		shutdown(_Socket,2);
-        closesocket(_Socket);
-		_Connected = false;
+		shutdown(socket_handle,2);
+        closesocket(socket_handle);
+		is_connected = false;
 
 		return false;
 	}
 
-	_Connected = true;
+	is_connected = true;
 	return true;
 }
 
 bool Responder::closeSocket()
 {
-    if(_Connected)
+    if(is_connected)
 	{
-        shutdown(_Socket,0);
-		closesocket(_Socket);
+        shutdown(socket_handle,0);
+		closesocket(socket_handle);
 	}	
-    _Connected = false;
+    is_connected = false;
 	return false;
 }
 
@@ -175,46 +175,46 @@ bool Responder::receiveString(std::string &ioStr, const char *delimeter)
 
 	data.erase();
 
-    if(_PreFetchedBufferSize > 0)
+    if(pre_fetched_buffer_size > 0)
 	{
-        if(strstr((char*)_PreFetchedBuffer,delimeter)!=0)
+        if(strstr((char*)pre_fetched_buffer,delimeter)!=0)
 		{
-            StringHandler::split((const char*)_PreFetchedBuffer,delimeter,currentLine,nextLine);
+            StringHandler::split((const char*)pre_fetched_buffer,delimeter,currentLine,nextLine);
 
             ioStr = currentLine;
 			currentLine.erase();
 
-            delete _PreFetchedBuffer;
-            _PreFetchedBuffer = NULL;
-            _PreFetchedBufferSize = nextLine.length();
+            delete pre_fetched_buffer;
+            pre_fetched_buffer = NULL;
+            pre_fetched_buffer_size = nextLine.length();
 
-            if(_PreFetchedBufferSize > 0)
+            if(pre_fetched_buffer_size > 0)
             {
-                _PreFetchedBuffer = new unsigned char[_PreFetchedBufferSize+1];
-                memset(_PreFetchedBuffer, 0, _PreFetchedBufferSize+1);
-                memcpy(_PreFetchedBuffer,nextLine.c_str(),_PreFetchedBufferSize);
+                pre_fetched_buffer = new unsigned char[pre_fetched_buffer_size+1];
+                memset(pre_fetched_buffer, 0, pre_fetched_buffer_size+1);
+                memcpy(pre_fetched_buffer,nextLine.c_str(),pre_fetched_buffer_size);
             }
 
 			return true;
 		}
 
-        data = (char*)_PreFetchedBuffer;
-        _PreFetchedBufferSize = 0;
-        delete _PreFetchedBuffer;
-        _PreFetchedBuffer = NULL;
+        data = (char*)pre_fetched_buffer;
+        pre_fetched_buffer_size = 0;
+        delete pre_fetched_buffer;
+        pre_fetched_buffer = NULL;
 	}
 
 	while(true)
 	{
         memset(&buffer[0],0,1024);
-        returnvalue = recv(_Socket,&buffer[0],1024,0);
+        returnvalue = recv(socket_handle,&buffer[0],1024,0);
 
 		// Error or link down
 		if(returnvalue < 1)
 		{
             int error = errno;
             ioStr.clear();
-			_Connected = false;
+			is_connected = false;
 			return false;
 		}
 
@@ -224,13 +224,13 @@ bool Responder::receiveString(std::string &ioStr, const char *delimeter)
 		{
             StringHandler::split(data,delimeter,currentLine, nextLine);
 
-            _PreFetchedBufferSize = nextLine.length();
+            pre_fetched_buffer_size = nextLine.length();
             
-            if(_PreFetchedBufferSize > 0)
+            if(pre_fetched_buffer_size > 0)
             {
-                _PreFetchedBuffer = new unsigned char[_PreFetchedBufferSize+1];
-                memset(_PreFetchedBuffer, 0, _PreFetchedBufferSize+1);
-                memcpy(_PreFetchedBuffer,nextLine.c_str(),_PreFetchedBufferSize);
+                pre_fetched_buffer = new unsigned char[pre_fetched_buffer_size+1];
+                memset(pre_fetched_buffer, 0, pre_fetched_buffer_size+1);
+                memcpy(pre_fetched_buffer,nextLine.c_str(),pre_fetched_buffer_size);
             }
 
             ioStr = currentLine;
@@ -252,14 +252,14 @@ bool Responder::receiveBuffer(char* ioBuffer,int len)
 
     // If there are pre-fetched bytes left, we have to copy that first and relase memory
 
-    if(_PreFetchedBufferSize > 0)
+    if(pre_fetched_buffer_size > 0)
     {
-        memcpy(ioBuffer, _PreFetchedBuffer, _PreFetchedBufferSize);
-        bytesleft = len - _PreFetchedBufferSize;
-        bufferpos = _PreFetchedBufferSize;
-        _PreFetchedBufferSize = 0;
-        delete _PreFetchedBuffer;
-        _PreFetchedBuffer = NULL;
+        memcpy(ioBuffer, pre_fetched_buffer, pre_fetched_buffer_size);
+        bytesleft = len - pre_fetched_buffer_size;
+        bufferpos = pre_fetched_buffer_size;
+        pre_fetched_buffer_size = 0;
+        delete pre_fetched_buffer;
+        pre_fetched_buffer = NULL;
 
         if(bytesleft < 1)
         {
@@ -271,7 +271,7 @@ bool Responder::receiveBuffer(char* ioBuffer,int len)
 	{
 		buffer = new char[bytesleft+1];
         memset(buffer, 0, bytesleft+1);
-        bytesread = recv(_Socket,buffer,bytesleft,0);
+        bytesread = recv(socket_handle,buffer,bytesleft,0);
 
 		// Error or link down
 		if(bytesread < 1)
@@ -280,7 +280,7 @@ bool Responder::receiveBuffer(char* ioBuffer,int len)
 			delete buffer;
 			ioBuffer = 0;
 			len	= 0;
-			_Connected = false;
+			is_connected = false;
 			return false;
 		}
 
@@ -300,20 +300,20 @@ bool Responder::receiveBuffer(char* ioBuffer,int len)
 
 int Responder::pendingPreFetchedBufferSize()
 {
-    return _PreFetchedBufferSize;
+    return pre_fetched_buffer_size;
 }
 
 
 bool Responder::sendBuffer(const char* data, int &len)
 {
-	if(!_Connected)
+	if(!is_connected)
 	{
 		return false;
 	}
 
 	long sentsize =0;
 
-    sentsize = send(_Socket, data, len,0);
+    sentsize = send(socket_handle, data, len,0);
 	if(sentsize==SOCKET_ERROR)
 	{
 		return false;
@@ -331,10 +331,10 @@ bool Responder::sendBuffer(const std::string &str)
 
 bool Responder::isConnected()
 {
-    return _Connected;
+    return is_connected;
 }
 
 SOCKET Responder::getSocket()
 {
-	return _Socket;
+	return socket_handle;
 }

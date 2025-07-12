@@ -9,24 +9,24 @@ Logger*  Logger::GetInstance()
 
 Logger::Logger()
 {
-    remoteLogPort = 9090;
-    remoteLogHost = "127.0.0.1";
-    logDirectory = "";
-    logFileSize = 1024;
-    logFile = NULL;
+    remote_log_port = 9090;
+    remote_log_host = "127.0.0.1";
+    log_directory = "";
+    log_file_size = 1024;
+    file_descriptor = NULL;
 
     char pidstr[16];
     memset((char*)&pidstr[0],0,16);
     sprintf(pidstr,"%d",getpid());
-    moduleName = pidstr;
+    log_module_name = pidstr;
 
-    logLevelMap.clear();
+    log_level_map.clear();
 
-    logLevelMap[LOG_INFO]       ="Information";
-    logLevelMap[LOG_WARNING]    ="Warning    ";
-    logLevelMap[LOG_ERROR]      ="Error      ";
-    logLevelMap[LOG_CRITICAL]   ="Critical   ";
-    logLevelMap[LOG_PANIC]      ="Panic      ";
+    log_level_map[LOG_INFO]       ="Information";
+    log_level_map[LOG_WARNING]    ="Warning    ";
+    log_level_map[LOG_ERROR]      ="Error      ";
+    log_level_map[LOG_CRITICAL]   ="Critical   ";
+    log_level_map[LOG_PANIC]      ="Panic      ";
 }
 
 Logger::~Logger()
@@ -36,29 +36,29 @@ Logger::~Logger()
 
 void Logger::stopLogging()
 {
-    if(logFile!=NULL)
+    if(file_descriptor!=NULL)
     {
-        fflush(logFile);
-        fclose(logFile);
+        fflush(file_descriptor);
+        fclose(file_descriptor);
     }
-    logLevelMap.clear();
+    log_level_map.clear();
 }
 
-void Logger::createBackupFileName(String &str)
+void Logger::createBackupFileName(std::string &str)
 {
     Timestamp ts;
-    String tstamp = ts.getDateString("yyyy.MM.dd-hh.mm.ss");
+    std::string tstamp = ts.getDateString("yyyy.MM.dd-hh.mm.ss");
     char temp[1024];
     memset((char*)&temp[0],0,16);
-    sprintf(temp,"%s_%s.log",moduleName.c_str(),tstamp.c_str());
+    sprintf(temp,"%s_%s.log",log_module_name.c_str(),tstamp.c_str());
     str = temp;
 }
 
 
 void Logger::startLogging(LogFileMode fmode)
 {
-    filemode = fmode;
-    if(logDirectory.empty() || logDirectory.length()<1)
+    log_file_mode = fmode;
+    if(log_directory.empty() || log_directory.length()<1)
     {
         char filepathbuffer[1024];
         memset((char*)&filepathbuffer[0],0,1024);
@@ -72,46 +72,46 @@ void Logger::startLogging(LogFileMode fmode)
             DirectoryHandler::createDirectory(filepathbuffer);
         }
 
-        logDirectory = filepathbuffer;
+        log_directory = filepathbuffer;
     }
 
-    logfilename = logDirectory;
-    logfilename += "/";
-    logfilename += moduleName;
-    logfilename += ".log";
+    log_filename = log_directory;
+    log_filename += "/";
+    log_filename += log_module_name;
+    log_filename += ".log";
 
-    if(filemode == FILE_APPEND)
+    if(log_file_mode == FILE_APPEND)
     {
-        logFile = fopen(logfilename.c_str(),"a+");
+        file_descriptor = fopen(log_filename.c_str(),"a+");
     }
     else
     {
-       logFile = fopen(logfilename.c_str(),"w+");
+       file_descriptor = fopen(log_filename.c_str(),"w+");
     }
 }
 
-void Logger::write(String logEntry, LogLevel llevel, const char* func, const char* file, int line)
+void Logger::write(std::string logEntry, LogLevel llevel, const char* func, const char* file, int line)
 {
-    if(logFile!=NULL)
+    if(file_descriptor!=NULL)
     {
-        int sz = ftell(logFile);
+        int sz = ftell(file_descriptor);
 
-        if(sz >= logFileSize*1024)
+        if(sz >= log_file_size*1024)
         {
-            String temp;
+            std::string temp;
             createBackupFileName(temp);
-            String backupfile = logBackupDirectory + temp;
+            std::string backupfile = log_backup_directory + temp;
             stopLogging();
-            rename(logfilename.c_str(),backupfile.c_str());
-            startLogging(filemode);
+            rename(log_filename.c_str(),backupfile.c_str());
+            startLogging(log_file_mode);
         }
 
-        String sourcefile;
+        std::string sourcefile;
         DirectoryHandler::getName(file, sourcefile);
-        String lvel = logLevelMap[llevel];
+        std::string lvel = log_level_map[llevel];
 
         Timestamp ts;
-        String tstamp = ts.getDateString("yyyy.MM.dd-hh.mm.ss");
+        std::string tstamp = ts.getDateString("yyyy.MM.dd-hh.mm.ss");
         char temp[1024];
         memset((char*)&temp[0],0,16);
 
@@ -123,7 +123,7 @@ void Logger::write(String logEntry, LogLevel llevel, const char* func, const cha
         fname[pos]=0;
         #endif
 
-        String left, right;
+        std::string left, right;
         StringHandler::split(fname, "::", left, right);
         if(right.length()>1)
         {
@@ -138,8 +138,8 @@ void Logger::write(String logEntry, LogLevel llevel, const char* func, const cha
         sprintf(temp,"%s|%s|%05d|%s|%s| ",tstamp.c_str(),lvel.c_str(),line,fname,sourcefile.c_str());
 
         logEntry = temp + logEntry;
-        fprintf(logFile,"%s\n",logEntry.c_str());
-        fflush(logFile);
+        fprintf(file_descriptor,"%s\n",logEntry.c_str());
+        fflush(file_descriptor);
     }
 }
 
@@ -168,39 +168,39 @@ void Logger::setModuleName(const char *mname)
 
         strncpy((char*)&buffer[0], (char*)&mname[ctr+1], 32);
 
-        moduleName = buffer;
+        log_module_name = buffer;
     }
     else
     {
-        moduleName = mname;
+        log_module_name = mname;
     }
 
-    StringHandler::replace(moduleName, ".exe", "");
-    StringHandler::replace(moduleName, ".EXE", "");
+    StringHandler::replace(log_module_name, ".exe", "");
+    StringHandler::replace(log_module_name, ".EXE", "");
 }
 
 void Logger::setRemotePort(int remotePort)
 {
-    remoteLogPort = remotePort;
+    remote_log_port = remotePort;
 }
 
-void Logger::setRemoteHost(String remoteHost)
+void Logger::setRemoteHost(std::string remoteHost)
 {
-    remoteLogHost = remoteHost;
+    remote_log_host = remoteHost;
 }
 
 void Logger::setLogFileSize(int flsz)
 {
-    logFileSize = flsz;
+    log_file_size = flsz;
 }
 
-void Logger::setLogDirectory(String dirpath)
+void Logger::setLogDirectory(std::string dirpath)
 {
-    logDirectory = dirpath;
+    log_directory = dirpath;
 
     char buffer[2048]={0};
 
-    strcpy(buffer, logDirectory.c_str());
+    strcpy(buffer, log_directory.c_str());
 
     if(buffer[strlen(buffer)-1]== '/' || buffer[strlen(buffer)-1]== '\\')
     {
@@ -209,7 +209,7 @@ void Logger::setLogDirectory(String dirpath)
 
     strcat(buffer, ".bak/");
 
-    logBackupDirectory = buffer;
+    log_backup_directory = buffer;
 
     if(!DirectoryHandler::isDirectory(buffer))
     {

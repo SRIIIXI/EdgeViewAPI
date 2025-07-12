@@ -9,37 +9,37 @@
 
 AbnfMessage::AbnfMessage()
 {
-	m_RequestBuffer.erase();
-    m_Content = NULL;
-	m_HasContent = false;
-	m_Request.erase();
-	m_URL.erase();
-	m_Protocol.erase();
-	m_Version.erase();
-	m_ResponseText.erase();
-	m_ResponseCode = -1;
-	m_MessageType = -1;
+	request_buffer.erase();
+    http_content = NULL;
+	has_content = false;
+	request.erase();
+	http_url.erase();
+	protocol.erase();
+	version.erase();
+	response_text.erase();
+	response_code = -1;
+	message_type = -1;
     keyList.clear();
     valueList.clear();
-    _ContentSize = 0;
+    content_size = 0;
 }
 
 AbnfMessage::AbnfMessage(const char* buffer)
 {
-	m_RequestBuffer.erase();
-    m_Content = NULL;
-    m_HasContent = false;
-	m_Request.erase();
-	m_URL.erase();
-	m_Protocol.erase();
-	m_Version.erase();
-	m_ResponseText.erase();
-	m_ResponseCode = -1;
-	m_MessageType = -1;
-	m_RequestBuffer = buffer;
+	request_buffer.erase();
+    http_content = NULL;
+    has_content = false;
+	request.erase();
+	http_url.erase();
+	protocol.erase();
+	version.erase();
+	response_text.erase();
+	response_code = -1;
+	message_type = -1;
+	request_buffer = buffer;
     keyList.clear();
     valueList.clear();
-    _ContentSize = 0;
+    content_size = 0;
 }
 
 void AbnfMessage::reset()
@@ -49,87 +49,87 @@ void AbnfMessage::reset()
 AbnfMessage::~AbnfMessage()
 {
 
-    if(	m_Content != NULL)
+    if(	http_content != NULL)
     {
-        delete m_Content;
-        m_Content = NULL;
+        delete http_content;
+        http_content = NULL;
     }
 
-    m_RequestBuffer.erase();
-    m_HasContent = false;
-    m_Request.erase();
-    m_URL.erase();
-    m_Protocol.erase();
-    m_Version.erase();
-    m_ResponseText.erase();
-    m_ResponseCode = -1;
-    m_MessageType = -1;
+    request_buffer.erase();
+    has_content = false;
+    request.erase();
+    http_url.erase();
+    protocol.erase();
+    version.erase();
+    response_text.erase();
+    response_code = -1;
+    message_type = -1;
     keyList.clear();
     valueList.clear();
-    _ContentSize = 0;
+    content_size = 0;
 }
 
 void AbnfMessage::setHeader(const char* buffer)
 {
 	reset();
-	m_RequestBuffer = buffer;
+	request_buffer = buffer;
 }
 
 void AbnfMessage::attachBody(const char* buffer)
 {
-    if(	m_Content != NULL)
+    if(	http_content != NULL)
     {
-        delete m_Content;
-        m_Content = NULL;
+        delete http_content;
+        http_content = NULL;
     }
 
-    m_Content = new char[_ContentSize];
-    memcpy(m_Content,buffer,_ContentSize);
+    http_content = new char[content_size];
+    memcpy(http_content,buffer,content_size);
 }
 
 const char*	AbnfMessage::getRequest()
 {
-	return m_Request.c_str();
+	return request.c_str();
 }
 
 const char*	AbnfMessage::getProtocol()
 {
-	return m_Protocol.c_str();
+	return protocol.c_str();
 }
 
 const char*	AbnfMessage::getURL()
 {
-	return m_URL.c_str();
+	return http_url.c_str();
 }
 
 const char*	AbnfMessage::getVersion()
 {
-	return m_Version.c_str();
+	return version.c_str();
 }
 
 const char*	AbnfMessage::getResponseText()
 {
-	return m_ResponseText.c_str();
+	return response_text.c_str();
 }
 
 long AbnfMessage::getResponseCode()
 {
-	return m_ResponseCode;
+	return response_code;
 }
 
 long AbnfMessage::getMessageType()
 {
-	return m_MessageType;
+	return message_type;
 }
 
 const char*	AbnfMessage::getContent()
 {
-    return m_Content;
+    return http_content;
 }
 
 int AbnfMessage::getContentSize()
 {
-    return _ContentSize;
+    return content_size;
 }
 
 
@@ -155,8 +155,8 @@ bool AbnfMessage::deSerialize()
 	std::string fieldValueParams;
 	std::string field, value;
 
-	getLine(m_MessageLine);
-	decodeMessageIdentificationLine(m_MessageLine.c_str());
+	getLine(message_line);
+	decodeMessageIdentificationLine(message_line.c_str());
 
 	while(true)
 	{
@@ -174,12 +174,12 @@ bool AbnfMessage::deSerialize()
 		{
 			if(atoi(value.c_str()) > 0)
 			{
-				m_HasContent = true;
-                _ContentSize = atoi(value.c_str());
+				has_content = true;
+                content_size = atoi(value.c_str());
 			}
 			else
 			{
-				m_HasContent = false;
+				has_content = false;
 			}
 			break;;
 		}
@@ -189,28 +189,28 @@ bool AbnfMessage::deSerialize()
 
 bool AbnfMessage::hasBody()
 {
-	return m_HasContent;
+	return has_content;
 }
 
 void AbnfMessage::getLine(std::string &line)
 {
-    if(m_RequestBuffer.length()<1)
+    if(request_buffer.length()<1)
     {
         line.clear();
         return;
     }
 
 	std::string next;
-    int pos = split(m_RequestBuffer.c_str(),"\r\n",line,next);
+    int pos = split(request_buffer.c_str(),"\r\n",line,next);
 
     if(pos == -1)
     {
-        line = m_RequestBuffer;
-        m_RequestBuffer.clear();
+        line = request_buffer;
+        request_buffer.clear();
         return;
     }
 
-	m_RequestBuffer = next;
+	request_buffer = next;
 }
 
 void AbnfMessage::processLine(const char *line, std::string &field, std::string &value)
@@ -240,13 +240,13 @@ void AbnfMessage::processLine(const char *line, std::string &field, std::string 
 
 void AbnfMessage::decodeMessageIdentificationLine(const char* requestLine)
 {
-	m_Request.erase();
-	m_URL.erase();
-	m_Version.erase();
-	m_Protocol.erase();
-	m_ResponseCode = -1;
-	m_ResponseText.erase();
-	m_MessageType = REQUEST;
+	request.erase();
+	http_url.erase();
+	version.erase();
+	protocol.erase();
+	response_code = -1;
+	response_text.erase();
+	message_type = REQUEST;
 
 	int ws = 0;
 	std::string token1, token2, token3;
@@ -279,18 +279,18 @@ void AbnfMessage::decodeMessageIdentificationLine(const char* requestLine)
 
     if(characterposition(token1.c_str(),'/') == -1)
 	{
-		m_Request = token1;
-		m_URL = token2;
-        split(token3.c_str(),'/',m_Protocol,m_Version);
-		m_MessageType = REQUEST;
+		request = token1;
+		http_url = token2;
+        split(token3.c_str(),'/',protocol,version);
+		message_type = REQUEST;
 		return;
 	}
 	else
 	{
-        split(token1.c_str(),'/',m_Protocol,m_Version);
-		m_ResponseCode = atoi(token2.c_str());
-		m_ResponseText = token3;
-		m_MessageType = RESPONSE;
+        split(token1.c_str(),'/',protocol,version);
+		response_code = atoi(token2.c_str());
+		response_text = token3;
+		message_type = RESPONSE;
 		return;
 	}
 }
@@ -299,37 +299,37 @@ void AbnfMessage::encodeMessageIdentificationLine()
 {
 	char tempBuffer[1024];
 	memset(tempBuffer,0,1024);
-	if(m_MessageType == RESPONSE)
+	if(message_type == RESPONSE)
 	{
-		sprintf(tempBuffer,"%s/%s %d %s\r\n",m_Protocol.c_str(),m_Version.c_str(),m_ResponseCode,m_ResponseText.c_str());
+		sprintf(tempBuffer,"%s/%s %d %s\r\n",protocol.c_str(),version.c_str(),response_code,response_text.c_str());
 	}
 	else
 	{
-		sprintf(tempBuffer,"%s %s %s/%s\r\n",m_Request.c_str(),m_URL.c_str(),m_Protocol.c_str(),m_Version.c_str());
+		sprintf(tempBuffer,"%s %s %s/%s\r\n",request.c_str(),http_url.c_str(),protocol.c_str(),version.c_str());
 	}
-	m_MessageLine = tempBuffer;
+	message_line = tempBuffer;
 }
 
 void AbnfMessage::setProtocolInformation(const char* request, const char* URL, const char* protocol, const char* version)
 {
-	m_MessageType = REQUEST;
+	message_type = REQUEST;
     keyList.clear();
     valueList.clear();
-	m_Protocol = protocol;
-	m_Version = version;
-	m_Request = request;
-	m_URL = URL;
+	protocol = protocol;
+	version = version;
+	request = request;
+	http_url = URL;
 }
 
 void AbnfMessage::setProtocolInformation(const char* protocol, const char* version, long responsecode, const char* responsetext)
 {
-	m_MessageType = RESPONSE;
+	message_type = RESPONSE;
     keyList.clear();
     valueList.clear();
-    m_Protocol = protocol;
-	m_Version = version;
-	m_ResponseCode = responsecode;
-	m_ResponseText = responsetext;
+    protocol = protocol;
+	version = version;
+	response_code = responsecode;
+	response_text = responsetext;
 }
 
 void AbnfMessage::addHeader(const char* field, const char* value)
@@ -345,7 +345,7 @@ void AbnfMessage::serialize(std::string &sipString)
     char buffer[8096]={0};
     char temp[1025]={0};
 
-	strcpy(buffer,m_MessageLine.c_str());
+	strcpy(buffer,message_line.c_str());
 
     int headercount = keyList.size();
 

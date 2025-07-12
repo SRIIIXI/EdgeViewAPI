@@ -65,7 +65,7 @@ public:
     void setMinute(int val);
     void setSecond(int val);
 private:
-    struct tm timeinfo;
+    struct tm time_info;
 };
 
 }

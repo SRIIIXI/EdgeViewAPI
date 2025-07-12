@@ -63,9 +63,10 @@ public:
     void setData(const double val);
     void setData(const struct tm val);
 
-    VariantType dataType;
-    unsigned char rawBuffer[256];
-    unsigned int dataSize;
+private:
+    VariantType variant_type;
+    unsigned char raw_buffer[256];
+    unsigned int data_size;
 };
 
 }

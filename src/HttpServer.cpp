@@ -15,7 +15,7 @@ void remove_new_socket(int sock);
 HttpServer::HttpServer()
 {
 	responderList.clear();
-    _callbackPtr = NULL;
+    callback_ptr = NULL;
 }
 
 HttpServer::~HttpServer()
@@ -49,8 +49,8 @@ void HttpServer::cleanup()
 
 void HttpServer::stop()
 {
-    ::shutdown(_listenerSocket,2);
-    close(_listenerSocket);
+    ::shutdown(listener_socket,2);
+    closesocket(listener_socket);
 }
 
 void HttpServer::suspend()
@@ -187,7 +187,7 @@ RunState HttpServer::run(int port)
     if (rc < 0)
     {
         writeLog("setsockopt() failed", LOG_ERROR);
-        close(listenerSocket);
+        closesocket(listenerSocket);
         return StackFailure;
     }
 
@@ -200,7 +200,7 @@ RunState HttpServer::run(int port)
     if (rc < 0)
     {
         writeLog("ioctl() failed", LOG_ERROR);
-        close(listenerSocket);
+        closesocket(listenerSocket);
         return StackFailure;
     }
 
@@ -215,7 +215,7 @@ RunState HttpServer::run(int port)
     if (rc < 0)
     {
         writeLog("bind() failed", LOG_ERROR);
-        close(listenerSocket);
+        closesocket(listenerSocket);
         return BindFailed;
     }
 
@@ -226,7 +226,7 @@ RunState HttpServer::run(int port)
     if (rc < 0)
     {
         writeLog("listen() failed", LOG_ERROR);
-        close(listenerSocket);
+        closesocket(listenerSocket);
         return ListenFailed;
     }
 
@@ -428,7 +428,7 @@ RunState HttpServer::run(int port)
                     /*************************************************/
                     if (close_conn)
                     {
-                        close(socket_index);
+                        closesocket(socket_index);
                         FD_CLR(socket_index, &master_set);
                         if (socket_index == max_sd)
                         {
@@ -448,7 +448,7 @@ RunState HttpServer::run(int port)
     for (socket_index=0; socket_index <= max_sd; ++socket_index)
     {
         if (FD_ISSET(socket_index, &master_set))
-            close(socket_index);
+            closesocket(socket_index);
     }
 
     return NormalExit;

@@ -2,29 +2,29 @@
 
 Configuration::Configuration()
 {
-    _ConfigFileName = "";
+    configuration_filename = "";
 }
 
 Configuration::~Configuration()
 {
 }
 
-void Configuration::setFileName(String fname)
+void Configuration::setFileName(std::string fname)
 {
-    _ConfigFileName = fname;
+    configuration_filename = fname;
 }
 
-void Configuration::setDirectory(String dname)
+void Configuration::setDirectory(std::string dname)
 {
-    _ConfigDirName = dname;
+    configuration_directory = dname;
 }
 
-bool Configuration::isSection(const String &section)
+bool Configuration::isSection(const std::string &section)
 {
-    map<String,key_value_list>::const_iterator confmapiter;
+    map<std::string, std::map<std::string, std::string>>::const_iterator confmapiter;
 
-    confmapiter = _ConfigurationMap.find(section);
-    if(confmapiter == _ConfigurationMap.end())
+    confmapiter = configuration_map.find(section);
+    if(confmapiter == configuration_map.end())
     {
         return false;
     }
@@ -34,32 +34,32 @@ bool Configuration::isSection(const String &section)
     }
 }
 
-std::string Configuration::getValue(const String &section, const String &settingKey, const String defval)
+std::string Configuration::getValue(const std::string &section, const std::string &settingKey, const std::string defval)
 {
-    map<String,key_value_list>::const_iterator confmapiter;
-    key_value_list::const_iterator kviter;
-    String str;
+    map<std::string, std::map<std::string, std::string>>::const_iterator confmapiter;
+    std::map<std::string, std::string>::const_iterator kviter;
+    std::string str;
 
-    confmapiter = _ConfigurationMap.find(section);
-    if(confmapiter == _ConfigurationMap.end())
+    confmapiter = configuration_map.find(section);
+    if(confmapiter == configuration_map.end())
     {
         return defval;
     }
     else
     {
-        key_value_list list = confmapiter->second;
+        std::map<std::string, std::string> list = confmapiter->second;
         kviter = list.find(settingKey);
 
         if(kviter == list.end())
         {
             return defval;
         }
-        str = (String)kviter->second;
+        str = (std::string)kviter->second;
     }
     return str;
 }
 
-bool Configuration::loadCustomConfiguration(const String &configFile)
+bool Configuration::loadCustomConfiguration(const std::string &configFile)
 {
     return loadConfiguration(configFile);
 }
@@ -69,9 +69,9 @@ bool Configuration::loadConfiguration()
     char filepathbuffer[2048];
     memset((char*)&filepathbuffer[0],0,sizeof(filepathbuffer));
 
-    strcat(filepathbuffer, _ConfigDirName.c_str());
+    strcat(filepathbuffer, configuration_directory.c_str());
     strcat(filepathbuffer, "/");
-    strcat(filepathbuffer, _ConfigFileName.c_str());
+    strcat(filepathbuffer, configuration_filename.c_str());
 
     if(!loadConfiguration(filepathbuffer))
     {
@@ -81,11 +81,11 @@ bool Configuration::loadConfiguration()
     return true;
 }
 
-bool Configuration::loadConfiguration(const String &configFile)
+bool Configuration::loadConfiguration(const std::string &configFile)
 {
     std::ifstream cfgfile(configFile.c_str());
     std::string line, leftstr, rightstr;
-    string_list linelist;
+    std::vector<std::string> linelist;
 
     // Following is a Windows INI style configuration file parsing algorithm
     // The first iteration only loads relevent lines from as a list of strings
@@ -128,17 +128,17 @@ bool Configuration::loadConfiguration(const String &configFile)
     }
 
     //Now we would iterate the string list and segregate key value pairs by section groups
-    String curSecHeader = "";
-    key_value_list kvlist;
+    std::string curSecHeader = "";
+    std::map<std::string, std::string> kvlist;
 
-    for(string_list::size_type i = 0; i != linelist.size(); i++)
+    for(std::vector<std::string>::size_type i = 0; i != linelist.size(); i++)
     {
         line = linelist[i];
         //Section header line
         if(line[0]=='[' && line[line.length()-1]==']')
         {
             //Check whether this is the first instance of a section header
-            if(_ConfigurationMap.size()<1)
+            if(configuration_map.size()<1)
             {
                 //Don't need to do anything
                 if(curSecHeader.length()<1)
@@ -171,11 +171,11 @@ bool Configuration::loadConfiguration(const String &configFile)
     return true;
 }
 
-void Configuration::addSection(String &str, const key_value_list &list)
+void Configuration::addSection(std::string &str, const std::map<std::string, std::string> &list)
 {
     str.erase(0,1);
     str.erase(str.length()-1,1);
-    _ConfigurationMap[str] = list;
+    configuration_map[str] = list;
 
 }
 
