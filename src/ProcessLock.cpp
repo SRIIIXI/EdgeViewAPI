@@ -7,6 +7,7 @@ ProcessLock::ProcessLock()
 
 bool ProcessLock::lockProcess(std::string &lockfileame)
 {
+    /*
     getLockFileName(lock_filename);
     if(lock_file_id != 0 && lock_file_id != -1)
     {
@@ -41,6 +42,7 @@ bool ProcessLock::lockProcess(std::string &lockfileame)
         lock_file_id = 0;
         return false;
     }
+    */
 
     return false;
 }
@@ -63,11 +65,12 @@ void ProcessLock::getLockFileName(std::string &lockfileame)
 
 ProcessLock::~ProcessLock()
 {
-    close(lock_file_id);
+    //close(lock_file_id);
 }
 
 void ProcessLock::getProcessName(std::string &processName)
 {
+    /*
     FILE *pipein_fp;
     char readbuf[80];
 
@@ -130,25 +133,29 @@ void ProcessLock::getProcessName(std::string &processName)
     }
     // Close the pipes
     pclose(pipein_fp);
+    */
 }
 
 void ProcessLock::getUserName(std::string &uName)
 {
-//    register struct passwd *pw;
-//    register uid_t uid;
-//    int c;
-
-//    uid = geteuid ();
-//    pw = getpwuid (uid);
-//    if (pw)
-//    {
-//        processName = pw->pw_name;
-//    }
-
-    uName = getenv("USER");
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+        char username[1025] = { 0 };
+        DWORD buffer_size = 1024;
+        ::GetUserName(username, &buffer_size);
+	    uName = std::string(username);
+    #else
+        uName = getenv("USER");
+    #endif
 }
 
 void ProcessLock::getTempDir(std::string &dirName)
 {
-    dirName = "/tmp";
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+        char tmppath[2049] = { 0 };
+        DWORD buffer_size = 2048;
+        ::GetTempPath(buffer_size, tmppath);
+        dirName = std::string(tmppath);
+    #else
+        dirName = getenv("TMPDIR");
+    #endif
 }

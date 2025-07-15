@@ -1,12 +1,49 @@
 #include "SignalHandler.hpp"
-#include "Logger.hpp"
+#include <signal.h>
+#include <stdlib.h>
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#include <memory.h>
+#else
+#include <string.h>
+#include <sys/wait.h>
+#endif
 
-int signalNumbers[] = {SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT, SIGBUS, SIGFPE, SIGSEGV, SIGPIPE, SIGTERM, SIGSTKFLT, SIGUSR1, SIGUSR2, SIGCHLD};
-const char *signalNames[] = {"SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGSEGV", "SIGPIPE", "SIGTERM", "SIGSTKFLT", "SIGUSR1", "SIGUSR2", "SIGCHLD"};
 
-char signalNameString[16]={0};
+// + BSD specific starts
+#ifndef SIGSTKFLT
+#define SIGSTKFLT 16
+#endif
+// + BSD specific ends
 
-SignalCallback *callback = NULL;
+// + Windows specific starts
+#ifndef ERESTART
+#define ERESTART 999
+#endif
+// + Windows specific ends
+
+#if !defined(_WIN32) && !defined(WIN32) && !defined (_WIN64) && !defined (WIN64)
+	int signalNumbers[] = { SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT, SIGBUS, SIGFPE, SIGSEGV, SIGPIPE, SIGTERM, SIGSTKFLT, SIGUSR1, SIGUSR2, SIGCHLD };
+#else
+	int signalNumbers[] = { SIGINT, SIGILL, SIGABRT, SIGFPE, SIGSEGV, SIGTERM };
+#endif
+
+#if defined(WIN32) || defined (_WIN32) || defined (_WIN64) || defined (WIN64)
+	static void shutdownCallback(int signo);
+#else
+	static void alarmCallback(int sig, siginfo_t *siginfo, void *context);
+	static void suspendCallback(int sig, siginfo_t *siginfo, void *context);
+	static void resumeCallback(int sig, siginfo_t *siginfo, void *context);
+	static void shutdownCallback(int sig, siginfo_t *siginfo, void *context);
+	static void ignoredCallback(int sig, siginfo_t *siginfo, void *context);
+	static void resetCallback(int sig, siginfo_t *siginfo, void *context);
+	static void user1Callback(int sig, siginfo_t *siginfo, void *context);
+	static void user2Callback(int sig, siginfo_t *siginfo, void *context);
+	static void childExitCallback(int sig, siginfo_t *siginfo, void *context);
+#endif
+
+SignalCallback *callback = nullptr;
+
+bool isShutdownSignalImpl(const int signum);
 
 
 SignalHandler::SignalHandler()
@@ -19,212 +56,239 @@ SignalHandler::~SignalHandler()
 
 void SignalHandler::registerCallbackClient(SignalCallback *clientptr)
 {
-    callback = clientptr;
+	callback = clientptr;
 }
 
 void SignalHandler::registerSignalHandlers()
 {
-    registerSignals();
-}
+	#if defined(WIN32) || defined (_WIN32) || defined (_WIN64) || defined (WIN64)
+	if (signal(SIGINT, shutdownCallback) == SIG_ERR)
+	{
+	}
 
-void SignalHandler::getSignalName(const int signum)
-{
-    int ctr = 0;
+	if (signal(SIGILL, shutdownCallback) == SIG_ERR)
+	{
+	}
 
-    memset((char*)&signalNameString[0], 0, sizeof(signalNameString));
-    strcpy(signalNameString, "<Not Named>");
+	if (signal(SIGABRT, shutdownCallback) == SIG_ERR)
+	{
+	}
 
-    for(ctr = 0; ctr < 15; ctr++)
-    {
-        if(signalNumbers[ctr] == signum)
-        {
-            memset((char*)&signalNameString[0], 0, sizeof(signalNameString));
-            strcpy(signalNameString, signalNames[ctr]);
-            break;
-        }
-    }
+	if (signal(SIGFPE, shutdownCallback) == SIG_ERR)
+	{
+	}
+
+	if (signal(SIGSEGV, shutdownCallback) == SIG_ERR)
+	{
+	}
+
+	if (signal(SIGTERM, shutdownCallback) == SIG_ERR)
+	{
+	}
+	#else
+	struct sigaction act;
+
+	for (int signum = 1; signum < 32; signum++)
+	{
+		memset(&act, '\0', sizeof(act));
+		act.sa_flags = SA_SIGINFO;
+
+		switch (signum)
+		{
+		case SIGKILL:
+		case SIGSTOP:
+		{
+			continue;
+		}
+		case SIGINT:
+		case SIGQUIT:
+		case SIGILL:
+		case SIGTRAP:
+		case SIGABRT:
+		case SIGBUS:
+		case SIGFPE:
+		case SIGSEGV:
+		case SIGPIPE:
+		case SIGTERM:
+		case SIGSTKFLT:
+		{
+			act.sa_sigaction = &shutdownCallback;
+			break;
+		}
+		case SIGALRM:
+		{
+			act.sa_sigaction = &alarmCallback;
+			break;
+		}
+		case SIGTSTP:
+		{
+			act.sa_sigaction = &suspendCallback;
+			break;
+		}
+		case SIGCONT:
+		{
+			act.sa_sigaction = &resumeCallback;
+			break;
+		}
+		case SIGHUP:
+		{
+			act.sa_sigaction = &resetCallback;
+			break;
+		}
+		case SIGCHLD:
+		{
+			act.sa_sigaction = &childExitCallback;
+			break;
+		}
+		case SIGUSR1:
+		{
+			act.sa_sigaction = &user1Callback;
+			break;
+		}
+		case SIGUSR2:
+		{
+			act.sa_sigaction = &user2Callback;
+			break;
+		}
+		default:
+		{
+			act.sa_sigaction = &ignoredCallback;
+		}
+		}
+
+		if (sigaction(signum, &act, NULL) < 0)
+		{
+		}
+		else
+		{
+		}
+	}
+#endif
 }
 
 bool SignalHandler::isShutdownSignal(const int signum)
 {
-    int ctr = 0;
-
-    bool found = false;
-
-    for(ctr = 0; ctr < 15; ctr++)
-    {
-        if(signalNumbers[ctr] == signum)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    return found;
+	return isShutdownSignalImpl(signum);
 }
 
-void SignalHandler::registerSignals()
+bool isShutdownSignalImpl(const int signum)
 {
-    struct sigaction act;
+	int ctr = 0;
 
-    for(int signum = 1; signum < 32; signum++)
-    {
-        getSignalName(signum);
+	bool found = false;
 
-        memset (&act, '\0', sizeof(act));
-        act.sa_flags = SA_SIGINFO;
+#if defined(WIN32) || defined (_WIN32) || defined (_WIN64) || defined (WIN64)
+	for (ctr = 0; ctr < 15; ctr++)
+	{
+		if (signalNumbers[ctr] == signum)
+		{
+			found = true;
+			break;
+		}
+	}
+#else
+	for (ctr = 0; ctr < 6; ctr++)
+	{
+		if (signalNumbers[ctr] == signum)
+		{
+			found = true;
+			break;
+		}
+	}
+#endif
 
-        switch(signum)
-        {
-            case SIGKILL:
-            case SIGSTOP:
-            {
-                continue;
-            }
-            case SIGINT:
-            case SIGQUIT:
-            case SIGILL:
-            case SIGTRAP:
-            case SIGABRT:
-            case SIGBUS:
-            case SIGFPE:
-            case SIGSEGV:
-            case SIGPIPE:
-            case SIGTERM:
-            case SIGSTKFLT:
-            {
-                act.sa_sigaction = &SignalHandler::shutdownCallback;
-                break;
-            }
-            case SIGALRM:
-            {
-                act.sa_sigaction = &SignalHandler::alarmCallback;
-                break;
-            }
-            case SIGTSTP:
-            {
-                act.sa_sigaction = &SignalHandler::suspendCallback;
-                break;
-            }
-            case SIGCONT:
-            {
-                act.sa_sigaction = &SignalHandler::resumeCallback;
-                break;
-            }
-            case SIGHUP:
-            {
-                act.sa_sigaction = &SignalHandler::resetCallback;
-                break;
-            }
-            case SIGCHLD:
-            {
-                act.sa_sigaction = &SignalHandler::childExitCallback;
-                break;
-            }
-            case SIGUSR1:
-            {
-                act.sa_sigaction = &SignalHandler::user1Callback;
-                break;
-            }
-            case SIGUSR2:
-            {
-                act.sa_sigaction = &SignalHandler::user2Callback;
-                break;
-            }
-            default:
-            {
-                act.sa_sigaction = &SignalHandler::ignoredCallback;
-            }
-        }
-
-        if (sigaction(signum, &act, NULL) < 0)
-        {
-        }
-        else
-        {
-        }
-    }
+	return found;
 }
 
-void SignalHandler::suspendCallback(int sig, siginfo_t *siginfo, void *context)
+#if defined(WIN32) || defined (_WIN32) || defined (_WIN64) || defined (WIN64)
+void shutdownCallback(int signo)
 {
-    if(callback)
-    {
-        callback->suspend();
-    }
+	if (callback && signo != SIGSEGV)
+	{
+		callback->shutdown();
+	}
 }
+#else
 
-void SignalHandler::resumeCallback(int sig, siginfo_t *siginfo, void *context)
+void suspendCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(callback)
-    {
-        callback->resume();
-    }
+	if (callback)
+	{
+		callback->suspend();
+	}
 }
 
-void SignalHandler::shutdownCallback(int sig, siginfo_t *siginfo, void *context)
+void resumeCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(sig == SIGSEGV)
-    {
-        exit(1);
-    }
-
-    if(callback)
-    {
-        callback->shutdown();
-    }
+	if (callback)
+	{
+		callback->resume();
+	}
 }
 
-void SignalHandler::ignoredCallback(int sig, siginfo_t *siginfo, void *context)
+void shutdownCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(SignalHandler::isShutdownSignal(sig))
-    {
-        shutdownCallback(sig, siginfo, context);
-        return;
-    }
+	if (sig == SIGSEGV)
+	{
+		exit(1);
+	}
+
+	if (callback)
+	{
+		callback->shutdown();
+	}
 }
 
-void SignalHandler::alarmCallback(int sig, siginfo_t *siginfo, void *context)
+void ignoredCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(callback)
-    {
-        callback->alarm();
-    }
+	if (::isShutdownSignal(sig))
+	{
+		shutdownCallback(sig, siginfo, context);
+		return;
+	}
 }
 
-void SignalHandler::resetCallback(int sig, siginfo_t *siginfo, void *context)
+void alarmCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(callback)
-    {
-        callback->reset();
-    }
+	if (callback)
+	{
+		callback->alarm();
+	}
 }
 
-void SignalHandler::childExitCallback(int sig, siginfo_t *siginfo, void *context)
+void resetCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    while (waitpid(-1, NULL, WNOHANG) > 0)
-    {
-    }
-
-    if(callback)
-    {
-        callback->childExit();
-    }
+	if (callback)
+	{
+		callback->reset();
+	}
 }
 
-void SignalHandler::user1Callback(int sig, siginfo_t *siginfo, void *context)
+void childExitCallback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(callback)
-    {
-        callback->userdefined1();
-    }
+	while (waitpid(-1, NULL, WNOHANG) > 0)
+	{
+	}
+
+	if (callback)
+	{
+		callback->childExit();
+	}
 }
 
-void SignalHandler::user2Callback(int sig, siginfo_t *siginfo, void *context)
+void user1Callback(int sig, siginfo_t *siginfo, void *context)
 {
-    if(callback)
-    {
-        callback->userdefined2();
-    }
+	if (callback)
+	{
+		callback->userdefined1();
+	}
 }
 
+void user2Callback(int sig, siginfo_t *siginfo, void *context)
+{
+	if (callback)
+	{
+		callback->userdefined2();
+	}
+}
+#endif
