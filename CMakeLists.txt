@@ -41,6 +41,7 @@ set(COMMON_SOURCES
 
 set(HEADERS
    ${HEADERS}
+   ${EDGEVIEWAPI_INCLUDE}/Model.hpp
    ${EDGEVIEWAPI_INCLUDE}/EventHandler.hpp
    ${EDGEVIEWAPI_INCLUDE}/Version.hpp
    ${EDGEVIEWAPI_INCLUDE}/HttpHandler.hpp
