@@ -3,7 +3,7 @@
 // This script creates collections, indexes, and validation rules
 
 // Use the IoT database
-use iot_platform;
+use('edgelite');
 
 // Drop existing collections (careful in production!)
 db.notifications.drop();

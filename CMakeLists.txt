@@ -37,6 +37,7 @@ set(COMMON_SOURCES
    ${EDGEVIEWAPI_SOURCES}/ResourceHandler.cpp
    ${EDGEVIEWAPI_SOURCES}/NetworkHelper.cpp
    ${EDGEVIEWAPI_SOURCES}/EdgeViewAPI.cpp
+   ${EDGEVIEWAPI_SOURCES}/Model.c
 )
 
 set(HEADERS

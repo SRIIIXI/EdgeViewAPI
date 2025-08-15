@@ -483,7 +483,7 @@ CREATE TRIGGER tr_assets_updated BEFORE UPDATE ON assets
     FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 -- Add comments for documentation
-COMMENT ON DATABASE current_database() IS 'IoT Platform Data Model - Comprehensive schema for device management, telemetry, and user permissions';
+COMMENT ON DATABASE edgelite IS 'IoT Platform Data Model - Comprehensive schema for device management, telemetry, and user permissions';
 COMMENT ON TABLE enterprises IS 'Multi-tenant enterprise/organization management';
 COMMENT ON TABLE users IS 'User accounts with enterprise isolation';
 COMMENT ON TABLE sites IS 'Physical or logical sites containing IoT deployments';
